@@ -16,9 +16,9 @@ Decomposr is a full-stack collaborative platform designed to streamline product 
   - Update task status (To Do → In Progress → Review → Done).
 
 ### 2. AI Task Generation
-- Powered by **OpenAI (GPT-3.5-Turbo)**.
+- Powered by **Google Gemini (Pro/Flash)**.
 - PMs can define a project idea (e.g., "Build a React Authentication Flow").
-- The AI "Product Manager" automatically generates a structured plan with 5-10 actionable tasks.
+- The AI "Product Manager" automatically generates a structured plan with 5-10 actionable tasks using Google's generative AI.
 
 ### 3. Real-Time Collaboration
 - Integrated **Socket.io** for instant notifications.
@@ -48,7 +48,7 @@ Decomposr is a full-stack collaborative platform designed to streamline product 
 - **Server**: Node.js + Express
 - **Database**: PostgreSQL
 - **ORM**: Prisma
-- **AI**: OpenAI API
+- **AI**: Google Generative AI (Gemini)
 - **Real-time**: Socket.io
 
 ---
@@ -64,7 +64,7 @@ Uses **JSON Web Tokens (JWT)** and **bcryptjs** for secure, stateless authentica
 
 ### 3. AI Decomposition Pipeline
 When a PM triggers AI generation:
-1. The backend sends the project description to OpenAI with a specific prompt.
+1. The backend sends the project description to Google Gemini with a specific prompt.
 2. The AI returns a structured JSON task list.
 3. The backend validates and persists these tasks to the database.
 4. The frontend refreshes in real-time to show the new plan.
@@ -82,13 +82,13 @@ When a PM triggers AI generation:
 ### Prerequisites
 - Node.js (v18+)
 - PostgreSQL Database
-- OpenAI API Key
+- Google Gemini API Key (available for free at [Google AI Studio](https://aistudio.google.com/))
 
 ### Installation
 1. Clone the repository:
    ```bash
    git clone <repo-url>
-   cd architect-ai-dashboard-cee
+   cd decomposr-dashboard
    ```
 2. Install dependencies:
    ```bash
@@ -98,7 +98,7 @@ When a PM triggers AI generation:
    ```env
    DATABASE_URL="postgresql://user:password@localhost:5432/db_name"
    JWT_SECRET="your-super-secret-key"
-   OPENAI_API_KEY="your-openai-api-key"
+   GEMINI_API_KEY="your-gemini-api-key"
    ```
 4. Initialize the database:
    ```bash

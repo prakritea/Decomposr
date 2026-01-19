@@ -1,11 +1,17 @@
 import { prisma } from "../lib/prisma";
 import { authenticateToken, AuthRequest } from "../middleware/auth";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Router } from "express";
 import { createNotification } from "../index";
 
 const router = Router();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    generationConfig: {
+        responseMimeType: "application/json",
+    }
+});
 
 // Create Project (PM Only)
 router.post("/:roomId/projects", authenticateToken, async (req: AuthRequest, res) => {
@@ -106,22 +112,15 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         if (!project) return res.status(404).json({ message: "Project not found" });
 
         // AI Prompt
-        const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [
-                {
-                    role: "system",
-                    content: "You are an AI Product Manager. Given a project idea, generate a list of 5 concrete software development tasks. Format as JSON: { tasks: [{ title: string, description: string, priority: 'low'|'medium'|'high'|'urgent' }] }"
-                },
-                {
-                    role: "user",
-                    content: `Project Idea: ${project.name} - ${project.description}`
-                }
-            ],
-            response_format: { type: "json_object" }
-        });
+        const prompt = `You are an AI Product Manager. Given a project idea, generate a list of 5 concrete software development tasks. 
+        Format as JSON: { "tasks": [{ "title": string, "description": string, "priority": "low"|"medium"|"high"|"urgent" }] }
+        Project Idea: ${project.name} - ${project.description}`;
 
-        const aiOutput = JSON.parse(response.choices[0].message.content || '{"tasks":[]}');
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        const aiOutput = JSON.parse(text || '{"tasks":[]}');
 
         // Create tasks in DB
         const tasks = await Promise.all(aiOutput.tasks.map((task: any) =>

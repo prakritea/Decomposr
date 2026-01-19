@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import Landing from "./pages/Landing";
+import ScrollToTop from "@/components/layout/ScrollToTop";
 import Dashboard from "./pages/Dashboard";
 import Docs from "./pages/Docs";
 import Login from "./pages/Login";
@@ -61,6 +62,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ScrollToTop />
               <Routes>
                 <Route
                   path="/"
@@ -181,7 +183,7 @@ function PlaceholderPage({ title }: { title: string }) {
           {title}
         </h1>
         <p className="text-white/60 mb-8">
-          This page is coming soon. Continue building with ArchitectAI to explore more features!
+          This page is coming soon. Continue building with Decomposr to explore more features!
         </p>
         <a
           href="/"

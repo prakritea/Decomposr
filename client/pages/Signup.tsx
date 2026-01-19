@@ -39,7 +39,7 @@ export default function Signup() {
 
         try {
             await signup({ name, email, password, role });
-            // Navigation will be handled by App.tsx based on role
+            navigate("/");
         } catch (error) {
             // Error is handled by AuthContext toast
         } finally {

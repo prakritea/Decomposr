@@ -1,5 +1,5 @@
 {
-  "name": "fusion-starter",
+  "name": "decomposr",
   "private": true,
   "type": "module",
   "pkg": {
@@ -21,13 +21,15 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.3",
     "ogl": "^1.0.11",
-    "openai": "^6.16.0",
+    "pg": "^8.17.1",
     "prisma": "^7.2.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
@@ -72,6 +74,7 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.2.1",
+    "@types/pg": "^8.16.0",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@types/socket.io": "^3.0.1",

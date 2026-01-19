@@ -84,7 +84,7 @@ const testimonials = [
         name: "Sarah Chen",
         title: "Product Manager at TechVenture",
         quote:
-            "ArchitectAI cut our project planning time by 70%. What used to take weeks now takes hours.",
+            "Decomposr cut our project planning time by 70%. What used to take weeks now takes hours.",
         avatar: "SC",
         company: "TechVenture",
     },
@@ -274,7 +274,7 @@ export default function Landing() {
                             See It In Action
                         </h2>
                         <p className="text-lg text-white/60 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                            Watch how ArchitectAI transforms your project idea into a complete plan
+                            Watch how Decomposr transforms your project idea into a complete plan
                         </p>
                     </div>
 
@@ -440,7 +440,7 @@ export default function Landing() {
                             Trusted by Industry Leaders
                         </h2>
                         <p className="text-lg text-white/60 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                            Thousands of teams use ArchitectAI to ship faster
+                            Thousands of teams use Decomposr to ship faster
                         </p>
                     </div>
 
@@ -598,7 +598,7 @@ export default function Landing() {
                                 Ready to Transform Your Project Planning?
                             </h2>
                             <p className="text-lg text-white/80 max-w-2xl mx-auto">
-                                Join thousands of product teams who are already using ArchitectAI to decompose complex projects and ship faster.
+                                Join thousands of product teams who are already using Decomposr to decompose complex projects and ship faster.
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                                 <Button

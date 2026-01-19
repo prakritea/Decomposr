@@ -226,7 +226,7 @@ export const mockRoomsService = {
         const task = project.tasks.find((t) => t.id === taskId);
         if (!task) throw new Error("Task not found");
 
-        task.assignedTo = userId;
+        task.assignedToId = userId;
         task.assignedToName = userName;
         localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
         return task;
@@ -254,7 +254,7 @@ export const mockRoomsService = {
         rooms.forEach((room) => {
             room.projects.forEach((project) => {
                 project.tasks.forEach((task) => {
-                    if (task.assignedTo === userId) {
+                    if (task.assignedToId === userId) {
                         allTasks.push(task);
                     }
                 });
