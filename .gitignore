@@ -24,8 +24,8 @@ dist-ssr
 *.sw?
 
 .config/
-!.env
-
-/generated/prisma
-
+.env
 *.env
+/generated/prisma
+server/models.json
+server/test-gemini.ts
