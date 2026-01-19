@@ -12,7 +12,7 @@ interface RoomCardProps {
 
 export function RoomCard({ room, showInviteCode }: RoomCardProps) {
     const isOwner = (userId: string) => {
-        return room.members.find((m) => m.userId === userId)?.role === "owner";
+        return room.members?.find((m) => m.userId === userId)?.role === "owner";
     };
 
     return (
@@ -37,11 +37,11 @@ export function RoomCard({ room, showInviteCode }: RoomCardProps) {
                     <div className="flex items-center gap-4 text-sm text-white/60">
                         <div className="flex items-center gap-1">
                             <Users className="w-4 h-4" />
-                            <span>{room.members.length} members</span>
+                            <span>{room.members?.length || 0} members</span>
                         </div>
                         <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
-                            <span>{new Date(room.createdAt).toLocaleDateString()}</span>
+                            <span>{room.createdAt ? new Date(room.createdAt).toLocaleDateString() : 'N/A'}</span>
                         </div>
                     </div>
                     <Button

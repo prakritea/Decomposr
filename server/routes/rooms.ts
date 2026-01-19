@@ -30,6 +30,10 @@ router.post("/create", authenticateToken, async (req: AuthRequest, res) => {
                         role: "pm" as UserRole,
                     }
                 }
+            },
+            include: {
+                members: { include: { user: { select: { name: true, email: true, role: true } } } },
+                projects: { include: { tasks: true } },
             }
         });
         res.status(201).json(room);
@@ -94,6 +98,8 @@ router.get("/user-rooms", authenticateToken, async (req: AuthRequest, res) => {
             },
             include: {
                 creator: { select: { name: true, email: true } },
+                members: { include: { user: { select: { name: true, email: true, role: true } } } },
+                projects: { include: { tasks: true } },
                 _count: { select: { members: true, projects: true } }
             }
         });

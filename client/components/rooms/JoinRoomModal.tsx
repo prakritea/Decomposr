@@ -56,10 +56,10 @@ export function JoinRoomModal({ open, onOpenChange, onJoinRoom }: JoinRoomModalP
                                 value={inviteCode}
                                 onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                                 required
-                                maxLength={8}
+                                maxLength={10}
                                 className="bg-white/5 border-white/10 text-white font-mono text-lg tracking-wider"
                             />
-                            <p className="text-xs text-white/40">8-character code (letters and numbers)</p>
+                            <p className="text-xs text-white/40">6-character code (letters and numbers)</p>
                         </div>
                     </div>
                     <DialogFooter>
@@ -73,7 +73,7 @@ export function JoinRoomModal({ open, onOpenChange, onJoinRoom }: JoinRoomModalP
                         </Button>
                         <Button
                             type="submit"
-                            disabled={isLoading || inviteCode.length !== 8}
+                            disabled={isLoading || inviteCode.length < 6}
                             className="bg-gradient-to-r from-[#60ff50] to-[#a64dff] hover:opacity-90 text-black font-bold"
                         >
                             {isLoading ? (
