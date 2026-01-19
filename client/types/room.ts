@@ -1,4 +1,5 @@
 import { User } from "./auth";
+import { Project } from "./project";
 
 export interface ProjectRoom {
     id: string;
@@ -8,6 +9,7 @@ export interface ProjectRoom {
     createdBy: string;
     createdAt: Date;
     members: RoomMember[];
+    projects: Project[];
     projectPlanId?: string;
 }
 

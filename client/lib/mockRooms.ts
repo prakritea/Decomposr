@@ -1,4 +1,5 @@
 import { ProjectRoom, RoomInvitation } from "@/types/room";
+import { Project, Task, TaskStatus } from "@/types/project";
 
 const ROOMS_KEY = "decomposr_rooms";
 const INVITES_KEY = "decomposr_invites";
@@ -26,6 +27,14 @@ export const mockRoomsService = {
                     ...m.user,
                     joinedAt: new Date(m.user.joinedAt),
                 },
+            })),
+            projects: (r.projects || []).map((p: any) => ({
+                ...p,
+                createdAt: new Date(p.createdAt),
+                tasks: (p.tasks || []).map((t: any) => ({
+                    ...t,
+                    dueDate: new Date(t.dueDate),
+                })),
             })),
         })) : [];
     },
@@ -55,6 +64,7 @@ export const mockRoomsService = {
                     role: "owner",
                 },
             ],
+            projects: [],
         };
 
         rooms.push(newRoom);
@@ -143,5 +153,113 @@ export const mockRoomsService = {
         localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
 
         return newCode;
+    },
+
+    createProject: (roomId: string, name: string, description: string): Project => {
+        const rooms = mockRoomsService.getRooms();
+        const room = rooms.find((r) => r.id === roomId);
+        if (!room) throw new Error("Room not found");
+
+        const newProject: Project = {
+            id: `proj-${Date.now()}`,
+            roomId,
+            name,
+            description,
+            tasks: [],
+            isAIPlanGenerated: false,
+            createdAt: new Date(),
+        };
+
+        room.projects.push(newProject);
+        localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
+        return newProject;
+    },
+
+    generateAIPlan: (roomId: string, projectId: string): Project => {
+        const rooms = mockRoomsService.getRooms();
+        const room = rooms.find((r) => r.id === roomId);
+        if (!room) throw new Error("Room not found");
+
+        const project = room.projects.find((p) => p.id === projectId);
+        if (!project) throw new Error("Project not found");
+
+        // Simulate AI generating tasks
+        const mockTasks: Task[] = [
+            {
+                id: `task-${Date.now()}-1`,
+                projectId,
+                roomId,
+                roomName: room.name,
+                projectName: project.name,
+                title: "Initial Research",
+                description: "Gather user requirements and analyze competition.",
+                dueDate: new Date(Date.now() + 86400000 * 3),
+                status: "todo",
+            },
+            {
+                id: `task-${Date.now()}-2`,
+                projectId,
+                roomId,
+                roomName: room.name,
+                projectName: project.name,
+                title: "UI Mockups",
+                description: "Create high-fidelity designs for the dashboard.",
+                dueDate: new Date(Date.now() + 86400000 * 7),
+                status: "todo",
+            },
+        ];
+
+        project.tasks = mockTasks;
+        project.isAIPlanGenerated = true;
+        localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
+        return project;
+    },
+
+    assignTask: (roomId: string, projectId: string, taskId: string, userId: string, userName: string): Task => {
+        const rooms = mockRoomsService.getRooms();
+        const room = rooms.find((r) => r.id === roomId);
+        if (!room) throw new Error("Room not found");
+
+        const project = room.projects.find((p) => p.id === projectId);
+        if (!project) throw new Error("Project not found");
+
+        const task = project.tasks.find((t) => t.id === taskId);
+        if (!task) throw new Error("Task not found");
+
+        task.assignedTo = userId;
+        task.assignedToName = userName;
+        localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
+        return task;
+    },
+
+    updateTaskStatus: (roomId: string, projectId: string, taskId: string, status: TaskStatus): Task => {
+        const rooms = mockRoomsService.getRooms();
+        const room = rooms.find((r) => r.id === roomId);
+        if (!room) throw new Error("Room not found");
+
+        const project = room.projects.find((p) => p.id === projectId);
+        if (!project) throw new Error("Project not found");
+
+        const task = project.tasks.find((t) => t.id === taskId);
+        if (!task) throw new Error("Task not found");
+
+        task.status = status;
+        localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
+        return task;
+    },
+
+    getEmployeeTasks: (userId: string): Task[] => {
+        const rooms = mockRoomsService.getRooms();
+        const allTasks: Task[] = [];
+        rooms.forEach((room) => {
+            room.projects.forEach((project) => {
+                project.tasks.forEach((task) => {
+                    if (task.assignedTo === userId) {
+                        allTasks.push(task);
+                    }
+                });
+            });
+        });
+        return allTasks;
     },
 };

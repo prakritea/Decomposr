@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, AuthState, LoginCredentials, SignupData } from "@/types/auth";
-import { mockAuthService } from "@/lib/mockAuth";
+import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType extends AuthState {
@@ -22,17 +22,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         // Check for existing session on mount
-        const user = mockAuthService.getCurrentUser();
-        setState({
-            user,
-            isAuthenticated: !!user,
-            isLoading: false,
-        });
+        const storedUser = localStorage.getItem("user");
+        const token = localStorage.getItem("token");
+
+        if (storedUser && token) {
+            setState({
+                user: JSON.parse(storedUser),
+                isAuthenticated: true,
+                isLoading: false,
+            });
+        } else {
+            setState((prev) => ({ ...prev, isLoading: false }));
+        }
     }, []);
 
     const login = async (credentials: LoginCredentials) => {
         try {
-            const user = await mockAuthService.login(credentials);
+            const { user, token } = await api.auth.login(credentials);
+
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", JSON.stringify(user));
+
             setState({
                 user,
                 isAuthenticated: true,
@@ -54,7 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signup = async (data: SignupData) => {
         try {
-            const user = await mockAuthService.signup(data);
+            const { user, token } = await api.auth.signup(data);
+
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", JSON.stringify(user));
+
             setState({
                 user,
                 isAuthenticated: true,
@@ -75,7 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const logout = async () => {
-        await mockAuthService.logout();
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
         setState({
             user: null,
             isAuthenticated: false,
@@ -88,26 +103,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const updateUser = async (updates: Partial<User>) => {
+        // This would normally call a profile update endpoint
+        // For now we just update local state and storage
         if (!state.user) return;
 
-        try {
-            const updatedUser = await mockAuthService.updateProfile(state.user.id, updates);
-            setState((prev) => ({
-                ...prev,
-                user: updatedUser,
-            }));
-            toast({
-                title: "Profile updated",
-                description: "Your changes have been saved",
-            });
-        } catch (error) {
-            toast({
-                title: "Update failed",
-                description: error instanceof Error ? error.message : "Could not update profile",
-                variant: "destructive",
-            });
-            throw error;
-        }
+        const updatedUser = { ...state.user, ...updates };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+
+        setState((prev) => ({
+            ...prev,
+            user: updatedUser,
+        }));
+
+        toast({
+            title: "Profile updated",
+            description: "Your changes have been saved",
+        });
     };
 
     return (

@@ -1,20 +1,53 @@
 import { useParams } from "react-router-dom";
 import { useRooms } from "@/contexts/RoomsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Aurora from "@/components/ui/Aurora";
-import { Users, Copy, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import {
+    Users,
+    Copy,
+    CheckCircle2,
+    Plus,
+    Sparkles,
+    Calendar,
+    LayoutDashboard,
+    Clock,
+    User as UserIcon,
+    AlertCircle
+} from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { CreateProjectModal } from "@/components/rooms/CreateProjectModal";
+import { TaskBoard } from "@/components/rooms/TaskBoard";
+import type { ProjectRoom as RoomData, RoomMember } from "@/types/room";
+import { Project, Task, TaskStatus } from "@/types/project";
 
 export default function ProjectRoom() {
     const { roomId } = useParams<{ roomId: string }>();
-    const { getRoom } = useRooms();
+    const { getRoom, generateAIPlan, assignTask, updateTaskStatus, refreshRooms } = useRooms();
+    const { user } = useAuth();
     const { toast } = useToast();
+    const [room, setRoom] = useState<RoomData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [projectModalOpen, setProjectModalOpen] = useState(false);
 
-    const room = roomId ? getRoom(roomId) : null;
+    const fetchRoom = useCallback(async () => {
+        if (!roomId) return;
+        setIsLoading(true);
+        const data = await getRoom(roomId);
+        setRoom(data);
+        setIsLoading(false);
+    }, [roomId, getRoom]);
+
+    useEffect(() => {
+        fetchRoom();
+    }, [fetchRoom]);
+
+    const isPM = user?.role === "pm";
 
     const copyInviteCode = () => {
         if (room) {
@@ -28,6 +61,46 @@ export default function ProjectRoom() {
         }
     };
 
+    const handleGenerateAI = async (rid: string, pid: string) => {
+        try {
+            await generateAIPlan(rid, pid);
+            await fetchRoom(); // Refresh room data to show new tasks
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleAssignTask = async (pid: string, tid: string, uid: string) => {
+        if (!room) return;
+        try {
+            await assignTask(room.id, pid, tid, uid);
+            await fetchRoom();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleUpdateStatus = async (pid: string, tid: string, status: TaskStatus) => {
+        if (!room) return;
+        try {
+            await updateTaskStatus(room.id, pid, tid, status);
+            await fetchRoom();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center text-white">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-white/60">Loading room details...</p>
+                </div>
+            </div>
+        );
+    }
+
     if (!room) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center text-white">
@@ -39,7 +112,7 @@ export default function ProjectRoom() {
     return (
         <div className="min-h-screen bg-black relative pt-20">
             {/* Aurora Background */}
-            <div className="absolute top-0 left-0 w-full h-[500px] z-0 opacity-30 pointer-events-none">
+            <div className="absolute top-0 left-0 w-full h-[300px] z-0 opacity-20 pointer-events-none">
                 <Aurora
                     colorStops={["#60ff50", "#a64dff", "#2000ff"]}
                     blend={0.5}
@@ -50,92 +123,141 @@ export default function ProjectRoom() {
 
             <div className="container max-w-7xl mx-auto px-4 py-8 relative z-10">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">{room.name}</h1>
-                    <p className="text-white/60">{room.description}</p>
-                </div>
-
-                {/* Invite Code Card */}
-                <Card className="bg-black/80 border-white/10 backdrop-blur-xl mb-8">
-                    <CardHeader>
-                        <CardTitle className="text-white">Invite Code</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <Badge className="bg-gradient-to-r from-[#60ff50] to-[#a64dff] text-black font-mono font-bold text-lg px-4 py-2">
-                                    {room.inviteCode}
-                                </Badge>
-                                <p className="text-sm text-white/60 mt-2">
-                                    Share this code with team members to invite them
-                                </p>
-                            </div>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <h1 className="text-3xl font-bold text-white">{room.name}</h1>
+                            <Badge variant="outline" className="text-primary border-primary/20">Room Dashboard</Badge>
+                        </div>
+                        <p className="text-white/60 max-w-2xl">{room.description}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {isPM && (
                             <Button
-                                onClick={copyInviteCode}
-                                variant="outline"
-                                className="border-white/20 text-white hover:bg-white/10"
+                                onClick={() => setProjectModalOpen(true)}
+                                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-black font-bold"
                             >
-                                {copied ? (
-                                    <>
-                                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                                        Copied!
-                                    </>
-                                ) : (
-                                    <>
-                                        <Copy className="w-4 h-4 mr-2" />
-                                        Copy Code
-                                    </>
-                                )}
+                                <Plus className="w-4 h-4 mr-2" />
+                                Create Project
+                            </Button>
+                        )}
+                        <div className="bg-white/5 border border-white/10 rounded-lg p-2 flex items-center gap-3">
+                            <span className="text-xs text-white/40 uppercase font-semibold">Invite Code: {room.inviteCode}</span>
+                            <Button onClick={copyInviteCode} variant="ghost" size="icon" className="h-6 w-6 text-white/60 hover:text-white">
+                                {copied ? <CheckCircle2 className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
                             </Button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                {/* Members */}
-                <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
-                    <CardHeader>
-                        <CardTitle className="text-white flex items-center gap-2">
-                            <Users className="w-5 h-5" />
-                            Team Members ({room.members.length})
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {room.members.map((member) => (
-                                <div
-                                    key={member.userId}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#60ff50] to-[#a64dff] flex items-center justify-center text-black font-bold">
-                                            {member.user.name
-                                                .split(" ")
-                                                .map((n) => n[0])
-                                                .join("")
-                                                .toUpperCase()
-                                                .slice(0, 2)}
-                                        </div>
-                                        <div>
-                                            <p className="text-white font-medium">{member.user.name}</p>
-                                            <p className="text-sm text-white/60">{member.user.email}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="border-white/20 text-white/80">
-                                            {member.user.role === "pm" ? "Product Manager" : "Team Member"}
-                                        </Badge>
-                                        {member.role === "owner" && (
-                                            <Badge className="bg-primary/20 text-primary border-primary/30">
-                                                Owner
+                <Tabs defaultValue="projects" className="space-y-6">
+                    <TabsList className="bg-white/5 border border-white/10 p-1">
+                        <TabsTrigger value="projects" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
+                            <LayoutDashboard className="w-4 h-4 mr-2" />
+                            Projects
+                        </TabsTrigger>
+                        <TabsTrigger value="tasks" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
+                            <Clock className="w-4 h-4 mr-2" />
+                            Task Board
+                        </TabsTrigger>
+                        <TabsTrigger value="members" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
+                            <Users className="w-4 h-4 mr-2" />
+                            Members
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="projects" className="space-y-6">
+                        {room.projects.length === 0 ? (
+                            <Card className="bg-black/50 border-white/10 border-dashed py-12">
+                                <CardContent className="flex flex-col items-center text-center">
+                                    <AlertCircle className="w-12 h-12 text-white/20 mb-4" />
+                                    <h3 className="text-xl font-semibold text-white mb-2">No projects yet</h3>
+                                    <p className="text-white/60 mb-6">Create a project to start planning and generating AI tasks.</p>
+                                    {isPM && (
+                                        <Button onClick={() => setProjectModalOpen(true)} variant="outline" className="border-white/20 text-white">
+                                            Create First Project
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {room.projects.map((project) => (
+                                    <Card key={project.id} className="bg-black/80 border-white/10 backdrop-blur-xl hover:border-white/20 transition-all">
+                                        <CardHeader>
+                                            <CardTitle className="text-white flex items-center justify-between">
+                                                {project.name}
+                                                {project.isAIPlanGenerated && <Sparkles className="w-4 h-4 text-accent" />}
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm text-white/60 mb-4 line-clamp-2">{project.description}</p>
+                                            <div className="flex items-center gap-4 text-xs text-white/40 mb-6">
+                                                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(project.createdAt).toLocaleDateString()}</span>
+                                                <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {project.tasks.length} Tasks</span>
+                                            </div>
+                                            {isPM && !project.isAIPlanGenerated && (
+                                                <Button
+                                                    onClick={() => handleGenerateAI(room.id, project.id)}
+                                                    className="w-full bg-accent/20 hover:bg-accent/30 text-accent border border-accent/20"
+                                                >
+                                                    <Sparkles className="w-4 h-4 mr-2" />
+                                                    Generate AI Plan
+                                                </Button>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="tasks">
+                        <TaskBoard
+                            roomId={room.id}
+                            projects={room.projects}
+                            isPM={isPM}
+                            members={room.members}
+                            onAssignTask={handleAssignTask}
+                            onUpdateStatus={handleUpdateStatus}
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="members">
+                        <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
+                            <CardHeader>
+                                <CardTitle className="text-white">Active Members</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {room.members.map((member) => (
+                                        <div key={member.userId} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold text-lg">
+                                                    {member.user.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-white font-medium">{member.user.name} {member.userId === user?.id && <span className="text-primary/60 text-xs ml-1">(You)</span>}</p>
+                                                    <p className="text-xs text-white/40">{member.user.email}</p>
+                                                </div>
+                                            </div>
+                                            <Badge variant="outline" className="border-white/10 text-white/60">
+                                                {member.user.role === "pm" ? "Product Manager" : "Team Member"}
                                             </Badge>
-                                        )}
-                                    </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
+
+            <CreateProjectModal
+                open={projectModalOpen}
+                onOpenChange={setProjectModalOpen}
+                roomId={room.id}
+            />
         </div>
     );
 }

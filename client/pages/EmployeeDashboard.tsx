@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useRooms } from "@/contexts/RoomsContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,16 +10,26 @@ import {
     Clock,
     Calendar,
     Plus,
+    ArrowRight,
+    Search,
+    AlertCircle,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function EmployeeDashboard() {
     const { user } = useAuth();
+    const { userRooms, getEmployeeTasks } = useRooms();
+
+    const assignedTasks = getEmployeeTasks();
+    const joinedRoomsCount = userRooms.length;
+    const completedTasks = assignedTasks.filter(t => t.status === 'done').length;
+    const upcomingDeadlines = assignedTasks.filter(t => t.status !== 'done' && new Date(t.dueDate) > new Date()).length;
 
     const stats = [
-        { label: "Joined Rooms", value: "0", icon: FolderKanban, color: "text-primary" },
-        { label: "Assigned Tasks", value: "0", icon: CheckCircle2, color: "text-accent" },
-        { label: "Completed", value: "0", icon: CheckCircle2, color: "text-green-400" },
-        { label: "Upcoming Deadlines", value: "0", icon: Clock, color: "text-yellow-400" },
+        { label: "Joined Rooms", value: joinedRoomsCount.toString(), icon: FolderKanban, color: "text-primary" },
+        { label: "Assigned Tasks", value: assignedTasks.length.toString(), icon: CheckCircle2, color: "text-accent" },
+        { label: "Completed", value: completedTasks.toString(), icon: CheckCircle2, color: "text-green-400" },
+        { label: "Upcoming Deadlines", value: upcomingDeadlines.toString(), icon: Clock, color: "text-yellow-400" },
     ];
 
     return (
@@ -37,9 +48,9 @@ export default function EmployeeDashboard() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-white mb-2">
-                        Welcome back, {user?.name}
+                        Team Member Dashboard – Home
                     </h1>
-                    <p className="text-white/60">Team Member Dashboard</p>
+                    <p className="text-white/60">Welcome back, {user?.name}</p>
                 </div>
 
                 {/* Stats Grid */}
@@ -62,69 +73,109 @@ export default function EmployeeDashboard() {
                     ))}
                 </div>
 
-                {/* Quick Actions */}
+                {/* Primary Actions */}
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                    <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
+                    <Card className="bg-black/80 border-white/10 backdrop-blur-xl border-dashed hover:border-primary/50 transition-all group relative overflow-hidden">
+                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <CardHeader>
-                            <CardTitle className="text-white">Join a Project Room</CardTitle>
+                            <CardTitle className="text-white flex items-center gap-2">
+                                <Plus className="w-5 h-5 text-primary" />
+                                Join New Room
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-white/60 mb-4">
-                                Enter an invite code to join a project room and start collaborating.
+                        <CardContent className="relative z-10">
+                            <p className="text-white/60 mb-6">
+                                Enter a room code provided by your Product Manager to join a team and start collaborating.
                             </p>
                             <Button
-                                className="w-full bg-gradient-to-r from-[#60ff50] to-[#a64dff] hover:opacity-90 text-black font-bold"
+                                asChild
+                                className="w-full bg-primary hover:bg-primary/90 text-black font-bold"
                             >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Join Room
+                                <Link to="/rooms">
+                                    Enter Code
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                </Link>
                             </Button>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
+                    <Card className="bg-black/80 border-white/10 backdrop-blur-xl hover:border-accent/50 transition-all group relative overflow-hidden">
+                        <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <CardHeader>
-                            <CardTitle className="text-white">My Tasks</CardTitle>
+                            <CardTitle className="text-white flex items-center gap-2">
+                                <Search className="w-5 h-5 text-accent" />
+                                View My Rooms
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-white/60 mb-4">
-                                View and manage all tasks assigned to you across projects.
+                        <CardContent className="relative z-10">
+                            <p className="text-white/60 mb-6">
+                                Browse all the project rooms you've joined and access your assigned tasks.
                             </p>
                             <Button
+                                asChild
                                 variant="outline"
                                 className="w-full border-white/20 text-white hover:bg-white/10"
                             >
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                View All Tasks
+                                <Link to="/rooms">
+                                    Open Rooms
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                </Link>
                             </Button>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* My Rooms */}
-                <Card className="bg-black/80 border-white/10 backdrop-blur-xl mb-8">
-                    <CardHeader>
-                        <CardTitle className="text-white">My Project Rooms</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-center py-12 text-white/40">
-                            <FolderKanban className="w-12 h-12 mx-auto mb-3" />
-                            <p>No project rooms yet</p>
-                            <p className="text-sm mt-1">Join a room using an invite code to get started</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Upcoming Tasks */}
+                {/* Upcoming Deadlines */}
                 <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
-                    <CardHeader>
-                        <CardTitle className="text-white">Upcoming Deadlines</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle className="text-white flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-yellow-400" />
+                            Upcoming Deadlines
+                        </CardTitle>
+                        <Badge variant="outline" className="text-white/40 border-white/10">Active Tasks</Badge>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-center py-12 text-white/40">
-                            <Calendar className="w-12 h-12 mx-auto mb-3" />
-                            <p>No upcoming deadlines</p>
-                            <p className="text-sm mt-1">Tasks with deadlines will appear here</p>
-                        </div>
+                        {assignedTasks.length > 0 ? (
+                            <div className="space-y-4">
+                                {assignedTasks
+                                    .filter(t => t.status !== 'done')
+                                    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                                    .slice(0, 5)
+                                    .map((task) => (
+                                        <div key={task.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant="outline" className="text-[10px] uppercase border-primary/20 text-primary">
+                                                        {task.roomName}
+                                                    </Badge>
+                                                    <Badge variant="outline" className="text-[10px] uppercase border-white/10 text-white/40">
+                                                        {task.projectName}
+                                                    </Badge>
+                                                </div>
+                                                <h4 className="text-white font-medium group-hover:text-primary transition-colors">{task.title}</h4>
+                                            </div>
+                                            <div className="flex items-center gap-6 mt-4 md:mt-0">
+                                                <div className="flex items-center gap-2 text-white/60">
+                                                    <Calendar className="w-4 h-4 text-white/20" />
+                                                    <span className="text-sm">Due {new Date(task.dueDate).toLocaleDateString("en-GB", { day: '2-digit', month: 'short' })}</span>
+                                                </div>
+                                                <Button asChild variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
+                                                    <Link to={`/rooms/${task.roomId}`}>
+                                                        View Task
+                                                        <ArrowRight className="w-4 h-4 ml-2" />
+                                                    </Link>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 text-white/40 border border-dashed border-white/10 rounded-xl">
+                                <Calendar className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                <p>No upcoming deadlines</p>
+                                <p className="text-sm mt-1">Tasks from all your rooms will appear here</p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

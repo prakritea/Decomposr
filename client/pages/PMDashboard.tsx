@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useRooms } from "@/contexts/RoomsContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -10,16 +11,18 @@ import {
     TrendingUp,
     Plus,
     ArrowRight,
+    Search,
 } from "lucide-react";
 
 export default function PMDashboard() {
     const { user } = useAuth();
+    const { userRooms } = useRooms();
 
     const stats = [
-        { label: "Total Projects", value: "0", icon: FolderKanban, color: "text-primary" },
-        { label: "Team Members", value: "0", icon: Users, color: "text-accent" },
-        { label: "Tasks Completed", value: "0", icon: CheckCircle2, color: "text-green-400" },
-        { label: "Sprint Progress", value: "0%", icon: TrendingUp, color: "text-blue-400" },
+        { label: "Project Rooms", value: userRooms.length.toString(), icon: FolderKanban, color: "text-primary" },
+        { label: "Total Members", value: userRooms.reduce((acc, room) => acc + room.members.length, 0).toString(), icon: Users, color: "text-accent" },
+        { label: "Active Projects", value: userRooms.reduce((acc, room) => acc + (room.projects?.length || 0), 0).toString(), icon: FolderKanban, color: "text-green-400" },
+        { label: "Avg. Progress", value: "0%", icon: TrendingUp, color: "text-blue-400" },
     ];
 
     return (
@@ -38,9 +41,9 @@ export default function PMDashboard() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-white mb-2">
-                        Welcome back, {user?.name}
+                        Product Manager Dashboard – Home
                     </h1>
-                    <p className="text-white/60">Product Manager Dashboard</p>
+                    <p className="text-white/60">Welcome back, {user?.name}</p>
                 </div>
 
                 {/* Stats Grid */}
@@ -63,35 +66,43 @@ export default function PMDashboard() {
                     ))}
                 </div>
 
-                {/* Quick Actions */}
+                {/* Primary Actions */}
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                    <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
+                    <Card className="bg-black/80 border-white/10 backdrop-blur-xl border-dashed hover:border-primary/50 transition-all group overflow-hidden relative">
+                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <CardHeader>
-                            <CardTitle className="text-white">Create New Project</CardTitle>
+                            <CardTitle className="text-white flex items-center gap-2">
+                                <Plus className="w-5 h-5 text-primary" />
+                                Create New Room
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-white/60 mb-4">
-                                Use AI to generate a comprehensive project plan with tasks, roles, and timelines.
+                        <CardContent className="relative z-10">
+                            <p className="text-white/60 mb-6">
+                                Start a new workspace for your team. You can invite members and create projects inside the room.
                             </p>
                             <Button
                                 asChild
-                                className="w-full bg-gradient-to-r from-[#60ff50] to-[#a64dff] hover:opacity-90 text-black font-bold"
+                                className="w-full bg-primary hover:bg-primary/90 text-black font-bold"
                             >
-                                <Link to="/dashboard">
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Generate Project Plan
+                                <Link to="/rooms">
+                                    Get Started
+                                    <ArrowRight className="w-4 h-4 ml-2" />
                                 </Link>
                             </Button>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
+                    <Card className="bg-black/80 border-white/10 backdrop-blur-xl hover:border-accent/50 transition-all group overflow-hidden relative">
+                        <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <CardHeader>
-                            <CardTitle className="text-white">Project Rooms</CardTitle>
+                            <CardTitle className="text-white flex items-center gap-2">
+                                <Search className="w-5 h-5 text-accent" />
+                                View Existing Rooms
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-white/60 mb-4">
-                                Create collaborative spaces for your team and manage invite codes.
+                        <CardContent className="relative z-10">
+                            <p className="text-white/60 mb-6">
+                                Access your active project rooms, manage members, and track project progress.
                             </p>
                             <Button
                                 asChild
@@ -99,15 +110,15 @@ export default function PMDashboard() {
                                 className="w-full border-white/20 text-white hover:bg-white/10"
                             >
                                 <Link to="/rooms">
-                                    <FolderKanban className="w-4 h-4 mr-2" />
-                                    Manage Rooms
+                                    Open Rooms
+                                    <ArrowRight className="w-4 h-4 ml-2" />
                                 </Link>
                             </Button>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Recent Activity */}
+                {/* Recent Activity (Optional but good for PM) */}
                 <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
                     <CardHeader>
                         <CardTitle className="text-white">Recent Activity</CardTitle>
@@ -116,7 +127,7 @@ export default function PMDashboard() {
                         <div className="text-center py-12 text-white/40">
                             <TrendingUp className="w-12 h-12 mx-auto mb-3" />
                             <p>No recent activity</p>
-                            <p className="text-sm mt-1">Create your first project to get started</p>
+                            <p className="text-sm mt-1">Activities from your rooms will appear here</p>
                         </div>
                     </CardContent>
                 </Card>

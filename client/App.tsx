@@ -74,7 +74,7 @@ const App = () => (
                   path="/dashboard"
                   element={
                     <AppLayout>
-                      <Dashboard />
+                      <DashboardRedirect />
                     </AppLayout>
                   }
                 />

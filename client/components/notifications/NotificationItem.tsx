@@ -59,7 +59,7 @@ export function NotificationItem({ notification }: NotificationItemProps) {
                         )}
                     </div>
                     <p className="text-sm text-white/60 mt-1">{notification.message}</p>
-                    <p className="text-xs text-white/40 mt-2">{formatTime(notification.timestamp)}</p>
+                    <p className="text-xs text-white/40 mt-2">{formatTime(notification.createdAt as Date)}</p>
                 </div>
             </div>
         </div>

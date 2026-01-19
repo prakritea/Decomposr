@@ -39,7 +39,7 @@ function expressPlugin(): Plugin {
     name: "express-plugin",
     apply: "serve",
     configureServer(server) {
-      const app = createServer();
+      const app = createServer(server.httpServer ?? undefined);
       server.middlewares.use(app);
     },
   };

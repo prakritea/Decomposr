@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  pm
+  employee
+}
+
+enum TaskStatus {
+  todo
+  inprogress
+  review
+  done
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          UserRole       @default(employee)
+  avatar        String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  createdRooms  Room[]         @relation("CreatedRooms")
+  memberships   RoomMember[]
+  assignedTasks Task[]         @relation("AssignedTasks")
+  notifications Notification[]
+}
+
+model Room {
+  id          String       @id @default(cuid())
+  name        String
+  description String
+  inviteCode  String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  creatorId   String
+  creator     User         @relation("CreatedRooms", fields: [creatorId], references: [id])
+  
+  members     RoomMember[]
+  projects    Project[]
+}
+
+model RoomMember {
+  id        String   @id @default(cuid())
+  role      UserRole
+  joinedAt  DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+
+  @@unique([userId, roomId])
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id])
+  
+  tasks       Task[]
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  status      TaskStatus   @default(todo)
+  priority    TaskPriority @default(medium)
+  dueDate     DateTime
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id])
+  
+  assignedToId String?
+  assignedTo   User?       @relation("AssignedTasks", fields: [assignedToId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}

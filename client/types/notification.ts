@@ -10,15 +10,11 @@ export type NotificationType =
 
 export interface Notification {
     id: string;
-    type: NotificationType;
+    type: string;
     title: string;
     message: string;
-    timestamp: Date;
+    createdAt: Date | string;
     read: boolean;
     userId: string;
-    metadata?: {
-        taskId?: string;
-        roomId?: string;
-        projectId?: string;
-    };
+    link?: string;
 }

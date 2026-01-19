@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { Notification, NotificationType } from "@/types/notification";
+import { Notification } from "@/types/notification";
+import { api } from "@/lib/api";
+import { useAuth } from "./AuthContext";
+import { io, Socket } from "socket.io-client";
 
 interface NotificationContextType {
     notifications: Notification[];
     unreadCount: number;
-    addNotification: (notification: Omit<Notification, "id" | "timestamp" | "read">) => void;
-    markAsRead: (id: string) => void;
+    markAsRead: (id: string) => Promise<void>;
     markAllAsRead: () => void;
     clearAll: () => void;
 }
@@ -14,26 +16,55 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const { user, isAuthenticated } = useAuth();
+    const [socket, setSocket] = useState<Socket | null>(null);
 
     const unreadCount = notifications.filter((n) => !n.read).length;
 
-    const addNotification = (data: Omit<Notification, "id" | "timestamp" | "read">) => {
-        const newNotification: Notification = {
-            ...data,
-            id: `notif-${Date.now()}-${Math.random()}`,
-            timestamp: new Date(),
-            read: false,
-        };
-        setNotifications((prev) => [newNotification, ...prev]);
+    // Fetch notifications from backend
+    const fetchNotifications = async () => {
+        try {
+            const data = await api.notifications.getAll();
+            setNotifications(data);
+        } catch (error) {
+            console.error("Failed to fetch notifications:", error);
+        }
     };
 
-    const markAsRead = (id: string) => {
-        setNotifications((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-        );
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchNotifications();
+
+            // Connect socket
+            const newSocket = io("http://localhost:8080", {
+                query: { userId: user?.id }
+            });
+
+            newSocket.on("notification", (notif: Notification) => {
+                setNotifications((prev) => [notif, ...prev]);
+            });
+
+            setSocket(newSocket);
+
+            return () => {
+                newSocket.disconnect();
+            };
+        }
+    }, [isAuthenticated, user?.id]);
+
+    const markAsRead = async (id: string) => {
+        try {
+            await api.notifications.markRead(id);
+            setNotifications((prev) =>
+                prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+            );
+        } catch (error) {
+            console.error("Failed to mark notification as read:", error);
+        }
     };
 
     const markAllAsRead = () => {
+        // Option to implement backend bulk update
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     };
 
@@ -41,39 +72,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         setNotifications([]);
     };
 
-    // Add some demo notifications on mount
-    useEffect(() => {
-        const demoNotifications: Notification[] = [
-            {
-                id: "demo-1",
-                type: "task_assigned",
-                title: "New task assigned",
-                message: "Build Login UI component",
-                timestamp: new Date(Date.now() - 1000 * 60 * 5),
-                read: false,
-                userId: "current-user",
-                metadata: { taskId: "task-1" },
-            },
-            {
-                id: "demo-2",
-                type: "room_joined",
-                title: "New member joined",
-                message: "Alice joined Food App project",
-                timestamp: new Date(Date.now() - 1000 * 60 * 30),
-                read: false,
-                userId: "current-user",
-                metadata: { roomId: "room-1" },
-            },
-        ];
-        setNotifications(demoNotifications);
-    }, []);
-
     return (
         <NotificationContext.Provider
             value={{
                 notifications,
                 unreadCount,
-                addNotification,
                 markAsRead,
                 markAllAsRead,
                 clearAll,
