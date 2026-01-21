@@ -72,11 +72,16 @@ router.post("/join", authenticateToken, async (req: AuthRequest, res) => {
         });
 
         // Notify PM (Creator)
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true }
+        });
+
         await createNotification({
             userId: room.creatorId,
             type: "room_joined",
             title: "New Member",
-            message: `${req.user?.id} joined your room ${room.name}`,
+            message: `${user?.name || "Someone"} joined your room ${room.name}`,
             link: `/rooms/${room.id}`
         });
 

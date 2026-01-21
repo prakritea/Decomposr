@@ -27,7 +27,7 @@ export default function Docs() {
                                 </CardHeader>
                                 <CardContent className="text-white/70 space-y-2">
                                     <p>1. <strong>Describe:</strong> Enter your project idea in natural language.</p>
-                                    <p>2. <strong>Analyze:</strong> Our AI agents decompose the idea into Epics and Tasks.</p>
+                                    <p>2. <strong>Analyze:</strong> Our Google Gemini-powered AI agents decompose the idea into Epics and Tasks.</p>
                                     <p>3. <strong>Plan:</strong> Review generated roles, timelines, and kanban boards.</p>
                                 </CardContent>
                             </Card>
@@ -102,7 +102,15 @@ export default function Docs() {
                         <div className="grid gap-4">
                             <div className="p-4 rounded-lg bg-white/5 border border-white/10">
                                 <h3 className="text-xl font-bold text-white">Kanban Board</h3>
-                                <p className="text-white/60">Drag and drop tasks between Backlog, Todo, In Progress, and Done.</p>
+                                <p className="text-white/60">Drag and drop tasks, assign members, and accept tasks to track progress.</p>
+                            </div>
+                            <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                                <h3 className="text-xl font-bold text-white">Real-time Notifications</h3>
+                                <p className="text-white/60">Stay updated when tasks are completed, ready for review, or when new members join.</p>
+                            </div>
+                            <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                                <h3 className="text-xl font-bold text-white">Profile & Settings</h3>
+                                <p className="text-white/60">Manage your account, view activity stats, and customize your experience.</p>
                             </div>
                             <div className="p-4 rounded-lg bg-white/5 border border-white/10">
                                 <h3 className="text-xl font-bold text-white">Export Tools</h3>

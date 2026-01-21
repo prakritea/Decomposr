@@ -60,6 +60,17 @@ router.patch("/:roomId/projects/:projectId/tasks/:taskId", authenticateToken, as
             });
         }
 
+        // If task is moved to REVIEW, notify PM
+        if (status === 'review') {
+            await createNotification({
+                userId: task.project.room.creatorId,
+                type: "task_updated", // You might want a specific type like 'task_review' if supported on frontend
+                title: "Task Ready for Review",
+                message: `Task "${task.title}" is ready for review.`,
+                link: `/rooms/${task.project.room.id}`
+            });
+        }
+
         res.json(task);
     } catch (error) {
         res.status(500).json({ message: "Error updating task" });
