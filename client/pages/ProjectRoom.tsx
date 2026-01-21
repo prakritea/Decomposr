@@ -16,12 +16,15 @@ import {
     LayoutDashboard,
     Clock,
     User as UserIcon,
-    AlertCircle
+    AlertCircle,
+    ListTodo
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateProjectModal } from "@/components/rooms/CreateProjectModal";
-import { TaskBoard } from "@/components/rooms/TaskBoard";
+import { KanbanBoard } from "@/components/rooms/KanbanBoard";
+import { ProjectOverview } from "@/components/rooms/ProjectOverview";
+import { EpicsList } from "@/components/rooms/EpicsList";
 import type { ProjectRoom as RoomData, RoomMember } from "@/types/room";
 import { Project, Task, TaskStatus } from "@/types/project";
 
@@ -33,6 +36,8 @@ export default function ProjectRoom() {
     const [room, setRoom] = useState<RoomData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [activeTab, setActiveTab] = useState("projects");
+    const [activeProject, setActiveProject] = useState<Project | null>(null);
     const [projectModalOpen, setProjectModalOpen] = useState(false);
 
     const fetchRoom = useCallback(async () => {
@@ -70,10 +75,22 @@ export default function ProjectRoom() {
         }
     };
 
+    const handleSetActiveProject = (project: Project) => {
+        setActiveProject(project);
+        setActiveTab("board");
+    };
+
     const handleAssignTask = async (pid: string, tid: string, uid: string) => {
         if (!room) return;
         try {
             await assignTask(room.id, pid, tid, uid);
+            // Optimistically update active project if on board
+            if (activeProject && activeProject.id === pid) {
+                const updatedTasks = activeProject.tasks.map(t =>
+                    t.id === tid ? { ...t, assignedToId: uid } : t
+                );
+                setActiveProject({ ...activeProject, tasks: updatedTasks });
+            }
             await fetchRoom();
         } catch (error) {
             console.error(error);
@@ -84,11 +101,20 @@ export default function ProjectRoom() {
         if (!room) return;
         try {
             await updateTaskStatus(room.id, pid, tid, status);
+            // Optimistic update handled in board, but sync needed
             await fetchRoom();
         } catch (error) {
             console.error(error);
         }
     };
+
+    // Sync active project with room data updates
+    useEffect(() => {
+        if (room && activeProject) {
+            const current = room.projects.find(p => p.id === activeProject.id);
+            if (current) setActiveProject(current);
+        }
+    }, [room]);
 
     if (isLoading) {
         return (
@@ -150,15 +176,15 @@ export default function ProjectRoom() {
                     </div>
                 </div>
 
-                <Tabs defaultValue="projects" className="space-y-6">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                     <TabsList className="bg-white/5 border border-white/10 p-1">
                         <TabsTrigger value="projects" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
                             <LayoutDashboard className="w-4 h-4 mr-2" />
                             Projects
                         </TabsTrigger>
-                        <TabsTrigger value="tasks" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
+                        <TabsTrigger value="board" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
                             <Clock className="w-4 h-4 mr-2" />
-                            Task Board
+                            Kanban Board
                         </TabsTrigger>
                         <TabsTrigger value="members" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
                             <Users className="w-4 h-4 mr-2" />
@@ -181,46 +207,73 @@ export default function ProjectRoom() {
                                 </CardContent>
                             </Card>
                         ) : (
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="space-y-8">
                                 {room.projects.map((project) => (
-                                    <Card key={project.id} className="bg-black/80 border-white/10 backdrop-blur-xl hover:border-white/20 transition-all">
-                                        <CardHeader>
-                                            <CardTitle className="text-white flex items-center justify-between">
-                                                {project.name}
-                                                {project.isAIPlanGenerated && <Sparkles className="w-4 h-4 text-accent" />}
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <p className="text-sm text-white/60 mb-4 line-clamp-2">{project.description}</p>
-                                            <div className="flex items-center gap-4 text-xs text-white/40 mb-6">
-                                                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(project.createdAt).toLocaleDateString()}</span>
-                                                <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {project.tasks.length} Tasks</span>
-                                            </div>
-                                            {isPM && !project.isAIPlanGenerated && (
-                                                <Button
-                                                    onClick={() => handleGenerateAI(room.id, project.id)}
-                                                    className="w-full bg-accent/20 hover:bg-accent/30 text-accent border border-accent/20"
-                                                >
-                                                    <Sparkles className="w-4 h-4 mr-2" />
-                                                    Generate AI Plan
-                                                </Button>
-                                            )}
-                                        </CardContent>
-                                    </Card>
+                                    <div key={project.id} className="space-y-6">
+                                        <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
+                                            <CardHeader>
+                                                <CardTitle className="text-white flex items-center justify-between">
+                                                    {project.name}
+                                                    {project.isAIPlanGenerated ? (
+                                                        <div className="flex gap-2">
+                                                            <Button onClick={() => handleSetActiveProject(project)} size="sm" variant="outline" className="h-8 border-primary/30 text-primary">
+                                                                View Board
+                                                            </Button>
+                                                            <Sparkles className="w-4 h-4 text-accent" />
+                                                        </div>
+                                                    ) : isPM && (
+                                                        <Button
+                                                            onClick={() => handleGenerateAI(room.id, project.id)}
+                                                            className="bg-accent/20 hover:bg-accent/30 text-accent border border-accent/20 h-8"
+                                                        >
+                                                            <Sparkles className="w-4 h-4 mr-2" />
+                                                            Generate AI Plan
+                                                        </Button>
+                                                    )}
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                {project.isAIPlanGenerated ? (
+                                                    <Tabs defaultValue="overview" className="w-full">
+                                                        <TabsList className="bg-black/40 border border-white/5 mb-4 w-full justify-start h-10 p-0">
+                                                            <TabsTrigger value="overview" className="data-[state=active]:bg-white/10 h-full px-6 rounded-none data-[state=active]:border-b-2 border-primary">Overview</TabsTrigger>
+                                                            <TabsTrigger value="epics" className="data-[state=active]:bg-white/10 h-full px-6 rounded-none data-[state=active]:border-b-2 border-primary">Epics & Breakdown</TabsTrigger>
+                                                        </TabsList>
+                                                        <TabsContent value="overview">
+                                                            <ProjectOverview project={project} />
+                                                        </TabsContent>
+                                                        <TabsContent value="epics">
+                                                            <EpicsList project={project} />
+                                                        </TabsContent>
+                                                    </Tabs>
+                                                ) : (
+                                                    <div className="text-center py-8 text-white/40">
+                                                        <p>No plan generated yet. Generate an AI plan to see architecture, timeline, and epics.</p>
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    </div>
                                 ))}
                             </div>
                         )}
                     </TabsContent>
 
-                    <TabsContent value="tasks">
-                        <TaskBoard
-                            roomId={room.id}
-                            projects={room.projects}
-                            isPM={isPM}
-                            members={room.members}
-                            onAssignTask={handleAssignTask}
-                            onUpdateStatus={handleUpdateStatus}
-                        />
+                    <TabsContent value="board" className="h-[calc(100vh-200px)]">
+                        {activeProject ? (
+                            <KanbanBoard
+                                project={activeProject}
+                                members={room.members}
+                                currentUser={user || undefined}
+                                onUpdateStatus={(tid, status) => handleUpdateStatus(activeProject.id, tid, status)}
+                                onAssignTask={(taskId, userId) => handleAssignTask(activeProject.id, taskId, userId)}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-white/40">
+                                <ListTodo className="w-16 h-16 mb-4 opacity-20" />
+                                <p>Select a project with an active plan to view the board.</p>
+                            </div>
+                        )}
                     </TabsContent>
 
                     <TabsContent value="members">
@@ -239,6 +292,30 @@ export default function ProjectRoom() {
                                                 <div>
                                                     <p className="text-white font-medium">{member.user.name} {member.userId === user?.id && <span className="text-primary/60 text-xs ml-1">(You)</span>}</p>
                                                     <p className="text-xs text-white/40">{member.user.email}</p>
+                                                    <div className="flex gap-3 mt-1.5">
+                                                        {(() => {
+                                                            const stats = room.projects.reduce((acc, project) => {
+                                                                const userTasks = project.tasks.filter(t => t.assignedToId === member.userId);
+                                                                return {
+                                                                    assigned: acc.assigned + userTasks.length,
+                                                                    completed: acc.completed + userTasks.filter(t => t.status === 'done').length
+                                                                };
+                                                            }, { assigned: 0, completed: 0 });
+
+                                                            return (
+                                                                <>
+                                                                    <div className="flex items-center gap-1.5 text-xs text-white/50 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                                                                        <ListTodo className="w-3 h-3" />
+                                                                        <span className="text-white font-semibold">{stats.assigned}</span> Assigned
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 text-xs text-white/50 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                                                                        <CheckCircle2 className="w-3 h-3 text-green-400" />
+                                                                        <span className="text-green-400 font-semibold">{stats.completed}</span> Done
+                                                                    </div>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <Badge variant="outline" className="border-white/10 text-white/60">

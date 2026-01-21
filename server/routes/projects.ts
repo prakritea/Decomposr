@@ -7,7 +7,7 @@ import { createNotification } from "../index";
 const router = Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     generationConfig: {
         responseMimeType: "application/json",
     }
@@ -46,7 +46,7 @@ router.patch("/:roomId/projects/:projectId/tasks/:taskId", authenticateToken, as
         const task = await prisma.task.update({
             where: { id: taskId },
             data: { status },
-            include: { project: { include: { room: true } } }
+            include: { project: { include: { room: true } }, assignedTo: { select: { id: true, name: true, role: true, avatar: true } } }
         });
 
         // If task is DONE, notify PM
@@ -80,7 +80,7 @@ router.patch("/:roomId/projects/:projectId/tasks/:taskId/assign", authenticateTo
         const task = await prisma.task.update({
             where: { id: taskId },
             data: { assignedToId: userId },
-            include: { project: { include: { room: true } } }
+            include: { project: { include: { room: true } }, assignedTo: { select: { id: true, name: true, role: true, avatar: true } } }
         });
 
         // Notify Employee
@@ -112,33 +112,106 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         if (!project) return res.status(404).json({ message: "Project not found" });
 
         // AI Prompt
-        const prompt = `You are an AI Product Manager. Given a project idea, generate a list of 5 concrete software development tasks. 
-        Format as JSON: { "tasks": [{ "title": string, "description": string, "priority": "low"|"medium"|"high"|"urgent" }] }
-        Project Idea: ${project.name} - ${project.description}`;
+        const prompt = `You are an expert Technical Product Manager and Software Architect.
+        Given a project idea, generate a comprehensive implementation plan stringified as a JSON object.
+        
+        Project Idea: "${project.name}" - ${project.description}
+
+        Required JSON Structure:
+        {
+            "summary": "High-level executive summary of the project",
+            "architecture": "Brief description of the recommended tech stack and architecture",
+            "timeline": "Estimated timestamp (e.g., '4 weeks')",
+            "epics": [
+                {
+                    "name": "Epic Title (e.g., Authentication, Core Features)",
+                    "description": "Description of this module",
+                    "tasks": [
+                        {
+                            "title": "Task Title",
+                            "description": "Detailed implementation steps",
+                            "priority": "low|medium|high|urgent",
+                            "category": "Frontend|Backend|Database|DevOps|Testing",
+                            "effort": "Estimated effort (e.g., '3 hours', '2 days')",
+                            "dependencies": "List of dependencies or 'None'"
+                        }
+                    ]
+                }
+            ]
+        }
+        
+        Ensure the output is strictly valid JSON. Generate at least 3-4 epics with multiple tasks each.`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
 
-        const aiOutput = JSON.parse(text || '{"tasks":[]}');
+        // Safe JSON parse
+        let aiOutput;
+        try {
+            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            aiOutput = JSON.parse(cleanText);
+        } catch (e) {
+            console.error("Failed to parse AI output:", text);
+            return res.status(500).json({ message: "Failed to parse AI plan" });
+        }
 
-        // Create tasks in DB
-        const tasks = await Promise.all(aiOutput.tasks.map((task: any) =>
-            prisma.task.create({
+        // Update Project Metadata
+        await prisma.project.update({
+            where: { id: projectId },
+            data: {
+                summary: aiOutput.summary,
+                architecture: aiOutput.architecture,
+                timeline: aiOutput.timeline,
+                isAIPlanGenerated: true
+            }
+        });
+
+        // Create Epics and Tasks
+        for (const epicData of aiOutput.epics) {
+            const epic = await prisma.epic.create({
                 data: {
-                    title: task.title,
-                    description: task.description,
-                    priority: (task.priority || 'medium').toLowerCase(),
-                    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 1 week
-                    projectId,
+                    name: epicData.name,
+                    description: epicData.description,
+                    projectId: projectId
                 }
-            })
-        ));
+            });
 
-        res.json(tasks);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error generating tasks" });
+            if (epicData.tasks && epicData.tasks.length > 0) {
+                await prisma.task.createMany({
+                    data: epicData.tasks.map((task: any) => ({
+                        title: task.title,
+                        description: task.description,
+                        priority: (task.priority || 'medium').toLowerCase(),
+                        category: task.category,
+                        effort: task.effort,
+                        dependencies: task.dependencies,
+                        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 1 week
+                        projectId: projectId,
+                        epicId: epic.id
+                    }))
+                });
+            }
+        }
+
+        // Return full project structure
+        const updatedProject = await prisma.project.findUnique({
+            where: { id: projectId },
+            include: { epics: { include: { tasks: true } } }
+        });
+
+        res.json(updatedProject);
+    } catch (error: any) {
+        console.error("AI Generation Error:", error);
+        if (error.status === 429) {
+            return res.status(429).json({
+                message: "Gemini API rate limit exceeded. Please wait a moment before trying again.",
+                retryAfter: error.errorDetails?.find((d: any) => d.retryDelay)?.retryDelay
+            });
+        }
+        res.status(error.status || 500).json({
+            message: error.message || "Error generating tasks with AI"
+        });
     }
 });
 

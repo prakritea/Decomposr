@@ -109,7 +109,11 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             toast({ title: "AI Plan Generated!", description: "Tasks have been added to your project." });
             return tasks;
         } catch (error) {
-            toast({ title: "Error", description: "Could not generate AI plan", variant: "destructive" });
+            toast({
+                title: "Error",
+                description: error instanceof Error ? error.message : "Could not generate AI plan",
+                variant: "destructive"
+            });
             throw error;
         }
     };

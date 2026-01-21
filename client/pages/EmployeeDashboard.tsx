@@ -159,12 +159,7 @@ export default function EmployeeDashboard() {
                                                     <Calendar className="w-4 h-4 text-white/20" />
                                                     <span className="text-sm">Due {new Date(task.dueDate).toLocaleDateString("en-GB", { day: '2-digit', month: 'short' })}</span>
                                                 </div>
-                                                <Button asChild variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
-                                                    <Link to={`/rooms/${task.roomId}`}>
-                                                        View Task
-                                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                                    </Link>
-                                                </Button>
+
                                             </div>
                                         </div>
                                     ))}

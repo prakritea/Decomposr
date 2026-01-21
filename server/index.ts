@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import { prisma } from "./lib/prisma";
-import { handleDemo } from "./routes/demo";
 import authRoutes from "./routes/auth";
 import roomRoutes from "./routes/rooms";
 import projectRoutes from "./routes/projects";
@@ -50,8 +49,6 @@ export function createServer(httpServer?: any, existingApp?: express.Express) {
     const ping = process.env.PING_MESSAGE ?? "ping";
     res.json({ message: ping });
   });
-
-  app.get("/api/demo", handleDemo);
 
   // Error handling
   app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

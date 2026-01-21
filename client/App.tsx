@@ -23,6 +23,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { RoomsProvider } from "./contexts/RoomsContext";
 import { Navigate } from "react-router-dom";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -136,11 +137,21 @@ const App = () => (
                     </AppLayout>
                   }
                 />
+
+
+                <Route
+                  path="/profile"
+                  element={
+                    <AppLayout>
+                      <Profile />
+                    </AppLayout>
+                  }
+                />
                 <Route
                   path="/settings"
                   element={
                     <AppLayout>
-                      <PlaceholderPage title="Settings" />
+                      <Settings />
                     </AppLayout>
                   }
                 />

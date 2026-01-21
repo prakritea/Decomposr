@@ -29,3 +29,5 @@ dist-ssr
 /generated/prisma
 server/models.json
 server/test-gemini.ts
+
+node_modules

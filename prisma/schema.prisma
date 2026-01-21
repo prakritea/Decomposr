@@ -77,33 +77,57 @@ model RoomMember {
 }
 
 model Project {
+  id                String   @id @default(cuid())
+  name              String
+  description       String
+  summary           String?
+  architecture      String?
+  timeline          String?
+  isAIPlanGenerated Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  roomId            String
+  room              Room     @relation(fields: [roomId], references: [id])
+  
+  tasks             Task[]
+  epics             Epic[]
+}
+
+model Epic {
   id          String   @id @default(cuid())
   name        String
-  description String
+  description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  roomId      String
-  room        Room     @relation(fields: [roomId], references: [id])
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
   
   tasks       Task[]
 }
 
 model Task {
-  id          String       @id @default(cuid())
-  title       String
-  description String
-  status      TaskStatus   @default(todo)
-  priority    TaskPriority @default(medium)
-  dueDate     DateTime
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String       @id @default(cuid())
+  title        String
+  description  String
+  status       TaskStatus   @default(todo)
+  priority     TaskPriority @default(medium)
+  category     String?      // e.g., Frontend, Backend, Testing
+  effort       String?      // e.g., "3 hours", "2 days"
+  dependencies String?      // Description of dependencies
+  dueDate      DateTime
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   
-  projectId   String
-  project     Project      @relation(fields: [projectId], references: [id])
+  projectId    String
+  project      Project      @relation(fields: [projectId], references: [id])
+  
+  epicId       String?
+  epic         Epic?        @relation(fields: [epicId], references: [id])
   
   assignedToId String?
-  assignedTo   User?       @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  assignedTo   User?        @relation("AssignedTasks", fields: [assignedToId], references: [id])
 }
 
 model Notification {

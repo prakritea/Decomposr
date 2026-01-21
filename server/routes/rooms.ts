@@ -33,12 +33,13 @@ router.post("/create", authenticateToken, async (req: AuthRequest, res) => {
             },
             include: {
                 members: { include: { user: { select: { name: true, email: true, role: true } } } },
-                projects: { include: { tasks: true } },
+                projects: { include: { tasks: { include: { assignedTo: { select: { id: true, name: true, role: true, avatar: true } } } } } },
             }
         });
         res.status(201).json(room);
     } catch (error) {
-        res.status(500).json({ message: "Error creating room" });
+        console.error("Error creating room:", error);
+        res.status(500).json({ message: `Error creating room: ${error instanceof Error ? error.message : "Unknown error"}` });
     }
 });
 
@@ -99,7 +100,7 @@ router.get("/user-rooms", authenticateToken, async (req: AuthRequest, res) => {
             include: {
                 creator: { select: { name: true, email: true } },
                 members: { include: { user: { select: { name: true, email: true, role: true } } } },
-                projects: { include: { tasks: true } },
+                projects: { include: { tasks: { include: { assignedTo: { select: { id: true, name: true, role: true, avatar: true } } } } } },
                 _count: { select: { members: true, projects: true } }
             }
         });
@@ -118,7 +119,7 @@ router.get("/:id", authenticateToken, async (req: AuthRequest, res) => {
             where: { id },
             include: {
                 members: { include: { user: { select: { id: true, name: true, role: true, email: true } } } },
-                projects: { include: { tasks: true } },
+                projects: { include: { tasks: { include: { assignedTo: { select: { id: true, name: true, role: true, avatar: true } } } } } },
             }
         });
 
