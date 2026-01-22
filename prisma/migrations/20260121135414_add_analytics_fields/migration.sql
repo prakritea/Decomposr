@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Task" ADD COLUMN     "startDate" TIMESTAMP(3),
+ADD COLUMN     "timeEstimate" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "timeSpent" INTEGER NOT NULL DEFAULT 0;

@@ -16,6 +16,7 @@ interface KanbanBoardProps {
     currentUser?: { id: string; role: string };
     onUpdateStatus: (taskId: string, status: TaskStatus) => void;
     onAssignTask: (taskId: string, userId: string) => void;
+    onUpdateTask: (taskId: string, data: Partial<Task>) => void;
 }
 
 const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
@@ -25,7 +26,7 @@ const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
     { id: "done", label: "Done", color: "bg-green-500/10 border-green-500/20" }
 ];
 
-export function KanbanBoard({ project, members, currentUser, onUpdateStatus, onAssignTask }: KanbanBoardProps) {
+export function KanbanBoard({ project, members, currentUser, onUpdateStatus, onAssignTask, onUpdateTask }: KanbanBoardProps) {
     const [tasks, setTasks] = useState<Task[]>(project.tasks);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -146,6 +147,7 @@ export function KanbanBoard({ project, members, currentUser, onUpdateStatus, onA
                 currentUser={currentUser}
                 onAssign={onAssignTask}
                 onStatusChange={onUpdateStatus}
+                onUpdateTask={onUpdateTask}
                 open={sheetOpen}
                 onOpenChange={setSheetOpen}
             />

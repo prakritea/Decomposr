@@ -25,6 +25,7 @@ import { CreateProjectModal } from "@/components/rooms/CreateProjectModal";
 import { KanbanBoard } from "@/components/rooms/KanbanBoard";
 import { ProjectOverview } from "@/components/rooms/ProjectOverview";
 import { EpicsList } from "@/components/rooms/EpicsList";
+import { AnalyticsTab } from "@/components/rooms/AnalyticsTab";
 import type { ProjectRoom as RoomData, RoomMember } from "@/types/room";
 import { Project, Task, TaskStatus } from "@/types/project";
 
@@ -110,11 +111,16 @@ export default function ProjectRoom() {
 
     // Sync active project with room data updates
     useEffect(() => {
-        if (room && activeProject) {
-            const current = room.projects.find(p => p.id === activeProject.id);
-            if (current) setActiveProject(current);
+        if (room) {
+            if (activeProject) {
+                const current = room.projects.find(p => p.id === activeProject.id);
+                if (current) setActiveProject(current);
+            } else if (room.projects.length > 0) {
+                // Auto-select first project
+                setActiveProject(room.projects[0]);
+            }
         }
-    }, [room]);
+    }, [room, activeProject]);
 
     if (isLoading) {
         return (
@@ -148,45 +154,113 @@ export default function ProjectRoom() {
             </div>
 
             <div className="container max-w-7xl mx-auto px-4 py-8 relative z-10">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <h1 className="text-3xl font-bold text-white">{room.name}</h1>
-                            <Badge variant="outline" className="text-primary border-primary/20">Room Dashboard</Badge>
+                {/* Enhanced Header */}
+                <div className="mb-10">
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-6">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                                <h1 className="text-4xl font-bold text-white tracking-tight">{room.name}</h1>
+                                <Badge variant="outline" className="text-primary border-primary/30 bg-primary/5 px-3 py-1">
+                                    <LayoutDashboard className="w-3 h-3 mr-1.5" />
+                                    Room
+                                </Badge>
+                            </div>
+                            <p className="text-white/70 text-lg max-w-3xl leading-relaxed">{room.description}</p>
                         </div>
-                        <p className="text-white/60 max-w-2xl">{room.description}</p>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            {isPM && (
+                                <Button
+                                    onClick={() => setProjectModalOpen(true)}
+                                    className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-black font-semibold shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    New Project
+                                </Button>
+                            )}
+                            <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-xl p-3 backdrop-blur-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-white/50 uppercase font-semibold tracking-wider mb-0.5">Invite Code</span>
+                                        <span className="text-sm text-white font-mono font-bold tracking-wide">{room.inviteCode}</span>
+                                    </div>
+                                    <Button
+                                        onClick={copyInviteCode}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                                    >
+                                        {copied ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        {isPM && (
-                            <Button
-                                onClick={() => setProjectModalOpen(true)}
-                                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-black font-bold"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Create Project
-                            </Button>
-                        )}
-                        <div className="bg-white/5 border border-white/10 rounded-lg p-2 flex items-center gap-3">
-                            <span className="text-xs text-white/40 uppercase font-semibold">Invite Code: {room.inviteCode}</span>
-                            <Button onClick={copyInviteCode} variant="ghost" size="icon" className="h-6 w-6 text-white/60 hover:text-white">
-                                {copied ? <CheckCircle2 className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-                            </Button>
-                        </div>
+
+                    {/* Stats Overview */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 backdrop-blur-sm">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-medium text-blue-300/80 uppercase tracking-wide">Projects</span>
+                                    <LayoutDashboard className="w-4 h-4 text-blue-400/60" />
+                                </div>
+                                <div className="text-2xl font-bold text-white">{room.projects.length}</div>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 backdrop-blur-sm">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-medium text-purple-300/80 uppercase tracking-wide">Tasks</span>
+                                    <ListTodo className="w-4 h-4 text-purple-400/60" />
+                                </div>
+                                <div className="text-2xl font-bold text-white">
+                                    {room.projects.reduce((sum, p) => sum + p.tasks.length, 0)}
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 backdrop-blur-sm">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-medium text-green-300/80 uppercase tracking-wide">Completed</span>
+                                    <CheckCircle2 className="w-4 h-4 text-green-400/60" />
+                                </div>
+                                <div className="text-2xl font-bold text-white">
+                                    {room.projects.reduce((sum, p) => sum + p.tasks.filter(t => t.status === 'done').length, 0)}
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20 backdrop-blur-sm">
+                            <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-medium text-orange-300/80 uppercase tracking-wide">Members</span>
+                                    <Users className="w-4 h-4 text-orange-400/60" />
+                                </div>
+                                <div className="text-2xl font-bold text-white">{room.members.length}</div>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                    <TabsList className="bg-white/5 border border-white/10 p-1">
-                        <TabsTrigger value="projects" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+                    <TabsList className="bg-gradient-to-r from-white/5 to-white/10 border border-white/20 p-1.5 rounded-xl backdrop-blur-sm shadow-lg">
+                        <TabsTrigger
+                            value="projects"
+                            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:border data-[state=active]:border-primary/30 text-white/60 data-[state=active]:text-white font-medium rounded-lg transition-all data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10"
+                        >
                             <LayoutDashboard className="w-4 h-4 mr-2" />
                             Projects
                         </TabsTrigger>
-                        <TabsTrigger value="board" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
+                        <TabsTrigger
+                            value="board"
+                            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:border data-[state=active]:border-primary/30 text-white/60 data-[state=active]:text-white font-medium rounded-lg transition-all data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10"
+                        >
                             <Clock className="w-4 h-4 mr-2" />
                             Kanban Board
                         </TabsTrigger>
-                        <TabsTrigger value="members" className="data-[state=active]:bg-white/10 text-white/60 data-[state=active]:text-white">
+                        <TabsTrigger
+                            value="members"
+                            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:border data-[state=active]:border-primary/30 text-white/60 data-[state=active]:text-white font-medium rounded-lg transition-all data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10"
+                        >
                             <Users className="w-4 h-4 mr-2" />
                             Members
                         </TabsTrigger>
@@ -194,37 +268,50 @@ export default function ProjectRoom() {
 
                     <TabsContent value="projects" className="space-y-6">
                         {room.projects.length === 0 ? (
-                            <Card className="bg-black/50 border-white/10 border-dashed py-12">
+                            <Card className="bg-gradient-to-br from-white/5 to-white/[0.02] border-white/10 border-dashed py-16 backdrop-blur-sm">
                                 <CardContent className="flex flex-col items-center text-center">
-                                    <AlertCircle className="w-12 h-12 text-white/20 mb-4" />
-                                    <h3 className="text-xl font-semibold text-white mb-2">No projects yet</h3>
-                                    <p className="text-white/60 mb-6">Create a project to start planning and generating AI tasks.</p>
+                                    <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                                        <AlertCircle className="w-10 h-10 text-white/30" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-white mb-3">No projects yet</h3>
+                                    <p className="text-white/60 mb-8 max-w-md text-lg">Create your first project to start planning and generating AI-powered tasks.</p>
                                     {isPM && (
-                                        <Button onClick={() => setProjectModalOpen(true)} variant="outline" className="border-white/20 text-white">
+                                        <Button
+                                            onClick={() => setProjectModalOpen(true)}
+                                            className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-black font-semibold shadow-lg shadow-primary/20"
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" />
                                             Create First Project
                                         </Button>
                                     )}
                                 </CardContent>
                             </Card>
                         ) : (
-                            <div className="space-y-8">
+                            <div className="space-y-6">
                                 {room.projects.map((project) => (
-                                    <div key={project.id} className="space-y-6">
-                                        <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
-                                            <CardHeader>
+                                    <div key={project.id} className="group">
+                                        <Card className="bg-gradient-to-br from-black/90 to-black/70 border-white/20 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                            <CardHeader className="relative border-b border-white/10 pb-4">
                                                 <CardTitle className="text-white flex items-center justify-between">
-                                                    {project.name}
-                                                    {project.isAIPlanGenerated ? (
-                                                        <div className="flex gap-2">
-                                                            <Button onClick={() => handleSetActiveProject(project)} size="sm" variant="outline" className="h-8 border-primary/30 text-primary">
-                                                                View Board
-                                                            </Button>
-                                                            <Sparkles className="w-4 h-4 text-accent" />
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border border-primary/30">
+                                                            <LayoutDashboard className="w-5 h-5 text-primary" />
                                                         </div>
+                                                        <div>
+                                                            <h3 className="text-xl font-bold">{project.name}</h3>
+                                                            <p className="text-sm text-white/50 font-normal mt-0.5">{project.description}</p>
+                                                        </div>
+                                                    </div>
+                                                    {project.isAIPlanGenerated ? (
+                                                        <Badge className="bg-gradient-to-r from-accent/20 to-accent/10 text-accent border-accent/30 gap-1.5">
+                                                            <Sparkles className="w-3.5 h-3.5" />
+                                                            AI Generated
+                                                        </Badge>
                                                     ) : isPM && (
                                                         <Button
                                                             onClick={() => handleGenerateAI(room.id, project.id)}
-                                                            className="bg-accent/20 hover:bg-accent/30 text-accent border border-accent/20 h-8"
+                                                            className="bg-gradient-to-r from-accent/20 to-accent/10 hover:from-accent/30 hover:to-accent/20 text-accent border border-accent/30 shadow-lg shadow-accent/10"
                                                         >
                                                             <Sparkles className="w-4 h-4 mr-2" />
                                                             Generate AI Plan
@@ -232,12 +319,28 @@ export default function ProjectRoom() {
                                                     )}
                                                 </CardTitle>
                                             </CardHeader>
-                                            <CardContent>
+                                            <CardContent className="relative pt-6">
                                                 {project.isAIPlanGenerated ? (
                                                     <Tabs defaultValue="overview" className="w-full">
-                                                        <TabsList className="bg-black/40 border border-white/5 mb-4 w-full justify-start h-10 p-0">
-                                                            <TabsTrigger value="overview" className="data-[state=active]:bg-white/10 h-full px-6 rounded-none data-[state=active]:border-b-2 border-primary">Overview</TabsTrigger>
-                                                            <TabsTrigger value="epics" className="data-[state=active]:bg-white/10 h-full px-6 rounded-none data-[state=active]:border-b-2 border-primary">Epics & Breakdown</TabsTrigger>
+                                                        <TabsList className="bg-white/5 border border-white/10 mb-6 w-full justify-start h-11 p-1 rounded-lg">
+                                                            <TabsTrigger
+                                                                value="overview"
+                                                                className="data-[state=active]:bg-white/10 h-full px-6 rounded-md data-[state=active]:shadow-lg font-medium"
+                                                            >
+                                                                Overview
+                                                            </TabsTrigger>
+                                                            <TabsTrigger
+                                                                value="epics"
+                                                                className="data-[state=active]:bg-white/10 h-full px-6 rounded-md data-[state=active]:shadow-lg font-medium"
+                                                            >
+                                                                Epics & Breakdown
+                                                            </TabsTrigger>
+                                                            <TabsTrigger
+                                                                value="analytics"
+                                                                className="data-[state=active]:bg-white/10 h-full px-6 rounded-md data-[state=active]:shadow-lg font-medium"
+                                                            >
+                                                                Analytics
+                                                            </TabsTrigger>
                                                         </TabsList>
                                                         <TabsContent value="overview">
                                                             <ProjectOverview project={project} />
@@ -245,10 +348,16 @@ export default function ProjectRoom() {
                                                         <TabsContent value="epics">
                                                             <EpicsList project={project} />
                                                         </TabsContent>
+                                                        <TabsContent value="analytics">
+                                                            <AnalyticsTab project={project} />
+                                                        </TabsContent>
                                                     </Tabs>
                                                 ) : (
-                                                    <div className="text-center py-8 text-white/40">
-                                                        <p>No plan generated yet. Generate an AI plan to see architecture, timeline, and epics.</p>
+                                                    <div className="text-center py-12 px-4">
+                                                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+                                                            <Sparkles className="w-8 h-8 text-white/20" />
+                                                        </div>
+                                                        <p className="text-white/50 text-lg">No plan generated yet. Generate an AI plan to see architecture, timeline, and epics.</p>
                                                     </div>
                                                 )}
                                             </CardContent>
@@ -267,6 +376,7 @@ export default function ProjectRoom() {
                                 currentUser={user || undefined}
                                 onUpdateStatus={(tid, status) => handleUpdateStatus(activeProject.id, tid, status)}
                                 onAssignTask={(taskId, userId) => handleAssignTask(activeProject.id, taskId, userId)}
+                                onUpdateTask={(taskId, data) => useRooms().updateTask(room.id, activeProject.id, taskId, data)}
                             />
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full text-white/40">
@@ -277,17 +387,28 @@ export default function ProjectRoom() {
                     </TabsContent>
 
                     <TabsContent value="members">
-                        <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
-                            <CardHeader>
-                                <CardTitle className="text-white">Active Members</CardTitle>
+                        <Card className="bg-gradient-to-br from-black/90 to-black/70 border-white/20 backdrop-blur-xl shadow-xl">
+                            <CardHeader className="border-b border-white/10 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center border border-orange-500/30">
+                                        <Users className="w-5 h-5 text-orange-400" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-white text-xl">Team Members</CardTitle>
+                                        <p className="text-sm text-white/50 font-normal mt-0.5">{room.members.length} active members</p>
+                                    </div>
+                                </div>
                             </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
+                            <CardContent className="pt-6">
+                                <div className="space-y-3">
                                     {room.members.map((member) => (
-                                        <div key={member.userId} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                                        <div key={member.userId} className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-200">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold text-lg">
-                                                    {member.user.name.charAt(0)}
+                                                <div className="relative">
+                                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-black font-bold text-xl shadow-lg">
+                                                        {member.user.name.charAt(0)}
+                                                    </div>
+                                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-black" />
                                                 </div>
                                                 <div>
                                                     <p className="text-white font-medium">{member.user.name} {member.userId === user?.id && <span className="text-primary/60 text-xs ml-1">(You)</span>}</p>

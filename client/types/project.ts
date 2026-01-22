@@ -24,7 +24,11 @@ export interface Task {
     category?: string;
     effort?: string;
     dependencies?: string;
+    createdAt: Date | string;
     updatedAt: Date | string;
+    timeEstimate?: number;
+    timeSpent?: number;
+    startDate?: Date | string | null;
 }
 
 export interface Epic {

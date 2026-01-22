@@ -16,6 +16,7 @@ interface RoomsContextType {
     generateAIPlan: (roomId: string, projectId: string) => Promise<Project[]>;
     assignTask: (roomId: string, projectId: string, taskId: string, userId: string) => Promise<Task>;
     updateTaskStatus: (roomId: string, projectId: string, taskId: string, status: TaskStatus) => Promise<Task>;
+    updateTask: (roomId: string, projectId: string, taskId: string, data: Partial<Task>) => Promise<Task>;
     getEmployeeTasks: () => Task[];
 }
 
@@ -136,6 +137,17 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             await refreshRooms();
             return task;
         } catch (error) {
+            toast({ title: "Error", description: "Could not update task status", variant: "destructive" });
+            throw error;
+        }
+    };
+
+    const updateTask = async (roomId: string, projectId: string, taskId: string, data: Partial<Task>): Promise<Task> => {
+        try {
+            const task = await api.projects.updateTask(roomId, projectId, taskId, data);
+            await refreshRooms();
+            return task;
+        } catch (error) {
             toast({ title: "Error", description: "Could not update task", variant: "destructive" });
             throw error;
         }
@@ -163,6 +175,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
                 generateAIPlan,
                 assignTask,
                 updateTaskStatus,
+                updateTask,
                 getEmployeeTasks,
             }}
         >

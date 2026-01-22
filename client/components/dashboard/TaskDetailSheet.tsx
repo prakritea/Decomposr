@@ -36,11 +36,12 @@ interface TaskDetailSheetProps {
     currentUser?: { id: string; role: string };
     onAssign: (taskId: string, userId: string) => void;
     onStatusChange?: (taskId: string, status: "todo" | "inprogress" | "review" | "done") => void;
+    onUpdateTask: (taskId: string, data: Partial<Task>) => void;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
-export function TaskDetailSheet({ task, members, currentUser, onAssign, onStatusChange, open, onOpenChange }: TaskDetailSheetProps) {
+export function TaskDetailSheet({ task, members, currentUser, onAssign, onStatusChange, onUpdateTask, open, onOpenChange }: TaskDetailSheetProps) {
     const [assigneeOpen, setAssigneeOpen] = useState(false);
 
     if (!task) return null;
@@ -74,6 +75,39 @@ export function TaskDetailSheet({ task, members, currentUser, onAssign, onStatus
 
                 <ScrollArea className="flex-1 -mx-6 px-6">
                     <div className="space-y-6 pb-8">
+                        {/* Time & Schedule */}
+                        <div className="grid grid-cols-3 gap-4 p-4 rounded-lg bg-white/5 border border-white/10">
+                            <div>
+                                <label className="text-xs text-muted-foreground mb-1.5 block">Start Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white"
+                                    value={task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : ''}
+                                    onChange={(e) => onUpdateTask(task.id, { startDate: e.target.value ? new Date(e.target.value) : null })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted-foreground mb-1.5 block">Est. Hours</label>
+                                <input
+                                    type="number"
+                                    className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white"
+                                    placeholder="0"
+                                    value={task.timeEstimate || 0}
+                                    onChange={(e) => onUpdateTask(task.id, { timeEstimate: parseInt(e.target.value) || 0 })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted-foreground mb-1.5 block">Time Spent</label>
+                                <input
+                                    type="number"
+                                    className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white"
+                                    placeholder="0"
+                                    value={task.timeSpent || 0}
+                                    onChange={(e) => onUpdateTask(task.id, { timeSpent: parseInt(e.target.value) || 0 })}
+                                />
+                            </div>
+                        </div>
+
                         {/* Assignee Section */}
                         <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                             <span className="text-sm font-medium text-muted-foreground">Assignee</span>

@@ -40,12 +40,18 @@ router.post("/:roomId/projects", authenticateToken, async (req: AuthRequest, res
 // Update Task Status
 router.patch("/:roomId/projects/:projectId/tasks/:taskId", authenticateToken, async (req: AuthRequest, res) => {
     const taskId = req.params.taskId as string;
-    const { status } = req.body;
+    const { status, timeEstimate, timeSpent, startDate } = req.body;
 
     try {
+        const updateData: any = {};
+        if (status) updateData.status = status;
+        if (timeEstimate !== undefined) updateData.timeEstimate = timeEstimate;
+        if (timeSpent !== undefined) updateData.timeSpent = timeSpent;
+        if (startDate !== undefined) updateData.startDate = startDate;
+
         const task = await prisma.task.update({
             where: { id: taskId },
-            data: { status },
+            data: updateData,
             include: { project: { include: { room: true } }, assignedTo: { select: { id: true, name: true, role: true, avatar: true } } }
         });
 

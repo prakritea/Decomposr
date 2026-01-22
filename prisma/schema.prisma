@@ -128,6 +128,10 @@ model Task {
   
   assignedToId String?
   assignedTo   User?        @relation("AssignedTasks", fields: [assignedToId], references: [id])
+
+  timeEstimate Int          @default(0) // In hours
+  timeSpent    Int          @default(0) // In hours
+  startDate    DateTime?
 }
 
 model Notification {
