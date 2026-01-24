@@ -12,17 +12,26 @@ import {
     Plus,
     ArrowRight,
     Search,
+    Activity as ActivityIcon,
+    ListTodo,
+    ClipboardCheck,
 } from "lucide-react";
+import { ActivityTimeline } from "@/components/rooms/ActivityTimeline";
 
 export default function PMDashboard() {
     const { user } = useAuth();
     const { userRooms } = useRooms();
 
+    const allTasks = userRooms.flatMap(r => (r.projects || []).flatMap(p => p.tasks || []));
+    const completedTasks = allTasks.filter(t => t.status === 'done').length;
+    const pendingReviews = allTasks.filter(t => t.status === 'review').length;
+    const avgProgress = allTasks.length > 0 ? Math.round((completedTasks / allTasks.length) * 100) : 0;
+
     const stats = [
         { label: "Project Rooms", value: userRooms.length.toString(), icon: FolderKanban, color: "text-primary" },
-        { label: "Total Members", value: userRooms.reduce((acc, room) => acc + room.members.length, 0).toString(), icon: Users, color: "text-accent" },
+        { label: "Pending Reviews", value: pendingReviews.toString(), icon: ClipboardCheck, color: "text-accent" },
         { label: "Active Projects", value: userRooms.reduce((acc, room) => acc + (room.projects?.length || 0), 0).toString(), icon: FolderKanban, color: "text-green-400" },
-        { label: "Avg. Progress", value: "0%", icon: TrendingUp, color: "text-blue-400" },
+        { label: "Avg. Progress", value: `${avgProgress}%`, icon: TrendingUp, color: "text-blue-400" },
     ];
 
     return (
@@ -118,19 +127,18 @@ export default function PMDashboard() {
                     </Card>
                 </div>
 
-                {/* Recent Activity (Optional but good for PM) */}
-                <Card className="bg-black/80 border-white/10 backdrop-blur-xl">
-                    <CardHeader>
-                        <CardTitle className="text-white">Recent Activity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-center py-12 text-white/40">
-                            <TrendingUp className="w-12 h-12 mx-auto mb-3" />
-                            <p>No recent activity</p>
-                            <p className="text-sm mt-1">Activities from your rooms will appear here</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Recent Activity Aggregated from all rooms */}
+                <div className="mt-8">
+                    <ActivityTimeline tasks={userRooms.flatMap(room =>
+                        (room.projects || []).flatMap(project =>
+                            (project.tasks || []).map(task => ({
+                                ...task,
+                                roomName: room.name,
+                                projectName: project.name
+                            }))
+                        )
+                    )} />
+                </div>
             </div>
         </div>
     );

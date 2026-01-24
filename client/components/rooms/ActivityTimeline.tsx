@@ -6,7 +6,7 @@ import { Activity, CheckCircle2, Circle } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface ActivityTimelineProps {
-    tasks: Task[];
+    tasks: (Task & { roomName?: string; projectName?: string })[];
 }
 
 export function ActivityTimeline({ tasks }: ActivityTimelineProps) {
@@ -60,16 +60,36 @@ export function ActivityTimeline({ tasks }: ActivityTimelineProps) {
                             {/* Content Card */}
                             <div className={`ml-16 md:ml-0 md:w-[45%] group`}>
                                 <div className={`bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/10 p-5 rounded-2xl backdrop-blur-md hover:border-blue-500/30 transition-all duration-300 shadow-xl`}>
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h4 className="font-bold text-white group-hover:text-blue-400 transition-colors">{task.title}</h4>
-                                        <span className="text-[10px] text-white/40 font-mono tracking-tighter ml-4 whitespace-nowrap bg-white/5 py-1 px-2 rounded">
-                                            {formatDistanceToNow(new Date(task.updatedAt), { addSuffix: true })}
-                                        </span>
+                                    <div className="flex flex-col gap-1 mb-3">
+                                        <div className="flex items-center gap-2">
+                                            {task.roomName && (
+                                                <span className="text-[10px] uppercase font-bold text-primary/60 bg-primary/5 px-2 py-0.5 rounded border border-primary/10">
+                                                    {task.roomName}
+                                                </span>
+                                            )}
+                                            {task.projectName && (
+                                                <span className="text-[10px] uppercase font-bold text-accent/60 bg-accent/5 px-2 py-0.5 rounded border border-accent/10">
+                                                    {task.projectName}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex justify-between items-start">
+                                            <h4 className="font-bold text-white group-hover:text-blue-400 transition-colors">{task.title}</h4>
+                                            <span className="text-[10px] text-white/40 font-mono tracking-tighter ml-4 whitespace-nowrap bg-white/5 py-1 px-2 rounded">
+                                                {formatDistanceToNow(new Date(task.updatedAt), { addSuffix: true })}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div className="text-sm text-white/60 mb-4 flex items-center gap-2">
                                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500/60" />
-                                        Status updated to <span className="text-white font-semibold">{task.status}</span>
+                                        {new Date(task.updatedAt).getTime() - new Date(task.createdAt).getTime() < 1000 ? (
+                                            <>New task <span className="text-white font-semibold">created</span></>
+                                        ) : task.status === 'done' ? (
+                                            <>Task marked as <span className="text-green-400 font-semibold">completed</span></>
+                                        ) : (
+                                            <>Status updated to <span className="text-white font-semibold">{task.status}</span></>
+                                        )}
                                     </div>
 
                                     {task.assignedTo && (

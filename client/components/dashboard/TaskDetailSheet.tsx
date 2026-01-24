@@ -178,64 +178,17 @@ export function TaskDetailSheet({ task, members, currentUser, onAssign, onStatus
                             </div>
                         </div>
 
-                        {/* Acceptance Criteria (Mocked for now) */}
-                        <div>
-                            <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-                                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                Acceptance Criteria
-                            </h3>
-                            <ul className="space-y-2 text-sm">
-                                <li className="flex items-start gap-2">
-                                    <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                    <span className="text-muted-foreground">Feature functionality matches requirements</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                    <span className="text-muted-foreground">Unit tests pass with &gt;80% coverage</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                    <span className="text-muted-foreground">UI represents approved design mocks</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        {/* AI Suggestions */}
-                        <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 p-4">
-                            <h3 className="text-sm font-medium text-purple-600 dark:text-purple-300 mb-3 flex items-center gap-2">
-                                <Bot className="w-4 h-4" />
-                                AI Suggestions
-                            </h3>
-                            <div className="space-y-3">
-                                <div className="text-xs text-muted-foreground bg-background/50 p-2 rounded border border-purple-500/10">
-                                    Consider breaking this task into two smaller sub-tasks: "API Schema Design" and "Endpoint Implementation".
-                                </div>
-                                <div className="text-xs text-muted-foreground bg-background/50 p-2 rounded border border-purple-500/10">
-                                    Reminder: This task has a dependency on "User Authentication" which is currently In Progress.
-                                </div>
-                            </div>
-                        </div>
-
                         <Separator />
 
-                        {/* Activity / Comments */}
+                        {/* Comments Placeholder */}
                         <div>
                             <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
                                 <MessageSquare className="w-4 h-4" />
                                 Comments
                             </h3>
                             <div className="space-y-4">
-                                <div className="flex gap-3">
-                                    <Avatar className="w-8 h-8">
-                                        <AvatarFallback>PM</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1 space-y-1">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium">Product Manager</span>
-                                            <span className="text-[10px] text-muted-foreground">2h ago</span>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">Please ensure we handle the edge case for timeout errors.</p>
-                                    </div>
+                                <div className="text-center py-6 text-xs text-white/20 border border-dashed border-white/5 rounded-lg">
+                                    No comments yet
                                 </div>
 
                                 <div className="mt-2">

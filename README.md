@@ -4,6 +4,8 @@
 
 Decomposr is a full-stack collaborative platform that revolutionizes product management through intelligent AI-driven task decomposition, interactive Kanban boards, and seamless real-time synchronization. It bridges the gap between high-level project concepts and concrete, executable development tasks.
 
+![Decomposr Landing Page](docs/images/landing-hero.png)
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)

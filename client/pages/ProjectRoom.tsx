@@ -265,13 +265,6 @@ export default function ProjectRoom() {
                             Analytics
                         </TabsTrigger>
                         <TabsTrigger
-                            value="activity"
-                            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:border data-[state=active]:border-primary/30 text-white/60 data-[state=active]:text-white font-medium rounded-lg transition-all data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10"
-                        >
-                            <Activity className="w-4 h-4 mr-2" />
-                            Activity
-                        </TabsTrigger>
-                        <TabsTrigger
                             value="members"
                             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:border data-[state=active]:border-primary/30 text-white/60 data-[state=active]:text-white font-medium rounded-lg transition-all data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10"
                         >
@@ -313,16 +306,6 @@ export default function ProjectRoom() {
                         )}
                     </TabsContent>
 
-                    <TabsContent value="activity">
-                        {activeProject ? (
-                            <ActivityTimeline tasks={activeProject.tasks} />
-                        ) : (
-                            <div className="flex flex-col items-center justify-center py-20 text-white/40">
-                                <Activity className="w-16 h-16 mb-4 opacity-20" />
-                                <p>No active project to view activity.</p>
-                            </div>
-                        )}
-                    </TabsContent>
 
                     <TabsContent value="board" className="h-[calc(100vh-200px)]">
                         {activeProject ? (
