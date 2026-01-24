@@ -9,18 +9,10 @@ services:
       - key: NODE_VERSION
         value: 22
       - key: DATABASE_URL
-        fromDatabase:
-          name: decomposr-db
-          property: connectionString
+        sync: false # Set manually in Render Dashboard to your Supabase URL
       - key: JWT_SECRET
         generateValue: true
       - key: GEMINI_API_KEY
         sync: false # Set manually in Render Dashboard
       - key: NODE_ENV
         value: production
-
-databases:
-  - name: decomposr-db
-    databaseName: decomposr
-    user: decomposr_user
-    plan: free
