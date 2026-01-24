@@ -17,7 +17,8 @@ import {
     Clock,
     User as UserIcon,
     AlertCircle,
-    ListTodo
+    ListTodo,
+    Activity
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +27,7 @@ import { KanbanBoard } from "@/components/rooms/KanbanBoard";
 import { ProjectOverview } from "@/components/rooms/ProjectOverview";
 import { EpicsList } from "@/components/rooms/EpicsList";
 import { AnalyticsTab } from "@/components/rooms/AnalyticsTab";
+import { ActivityTimeline } from "@/components/rooms/ActivityTimeline";
 import type { ProjectRoom as RoomData, RoomMember } from "@/types/room";
 import { Project, Task, TaskStatus } from "@/types/project";
 
@@ -37,7 +39,7 @@ export default function ProjectRoom() {
     const [room, setRoom] = useState<RoomData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [copied, setCopied] = useState(false);
-    const [activeTab, setActiveTab] = useState("projects");
+    const [activeTab, setActiveTab] = useState("overview");
     const [activeProject, setActiveProject] = useState<Project | null>(null);
     const [projectModalOpen, setProjectModalOpen] = useState(false);
 
@@ -198,15 +200,6 @@ export default function ProjectRoom() {
 
                     {/* Stats Overview */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 backdrop-blur-sm">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-medium text-blue-300/80 uppercase tracking-wide">Projects</span>
-                                    <LayoutDashboard className="w-4 h-4 text-blue-400/60" />
-                                </div>
-                                <div className="text-2xl font-bold text-white">{room.projects.length}</div>
-                            </CardContent>
-                        </Card>
                         <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 backdrop-blur-sm">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between mb-2">
@@ -244,11 +237,11 @@ export default function ProjectRoom() {
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
                     <TabsList className="bg-gradient-to-r from-white/5 to-white/10 border border-white/20 p-1.5 rounded-xl backdrop-blur-sm shadow-lg">
                         <TabsTrigger
-                            value="projects"
+                            value="overview"
                             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:border data-[state=active]:border-primary/30 text-white/60 data-[state=active]:text-white font-medium rounded-lg transition-all data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10"
                         >
-                            <LayoutDashboard className="w-4 h-4 mr-2" />
-                            Projects
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Overview
                         </TabsTrigger>
                         <TabsTrigger
                             value="board"
@@ -256,6 +249,27 @@ export default function ProjectRoom() {
                         >
                             <Clock className="w-4 h-4 mr-2" />
                             Kanban Board
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="epics"
+                            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:border data-[state=active]:border-primary/30 text-white/60 data-[state=active]:text-white font-medium rounded-lg transition-all data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10"
+                        >
+                            <Calendar className="w-4 h-4 mr-2" />
+                            Epics
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="analytics"
+                            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:border data-[state=active]:border-primary/30 text-white/60 data-[state=active]:text-white font-medium rounded-lg transition-all data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10"
+                        >
+                            <AlertCircle className="w-4 h-4 mr-2" />
+                            Analytics
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="activity"
+                            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:border data-[state=active]:border-primary/30 text-white/60 data-[state=active]:text-white font-medium rounded-lg transition-all data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10"
+                        >
+                            <Activity className="w-4 h-4 mr-2" />
+                            Activity
                         </TabsTrigger>
                         <TabsTrigger
                             value="members"
@@ -266,104 +280,46 @@ export default function ProjectRoom() {
                         </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="projects" className="space-y-6">
-                        {room.projects.length === 0 ? (
-                            <Card className="bg-gradient-to-br from-white/5 to-white/[0.02] border-white/10 border-dashed py-16 backdrop-blur-sm">
-                                <CardContent className="flex flex-col items-center text-center">
-                                    <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
-                                        <AlertCircle className="w-10 h-10 text-white/30" />
-                                    </div>
-                                    <h3 className="text-2xl font-bold text-white mb-3">No projects yet</h3>
-                                    <p className="text-white/60 mb-8 max-w-md text-lg">Create your first project to start planning and generating AI-powered tasks.</p>
-                                    {isPM && (
-                                        <Button
-                                            onClick={() => setProjectModalOpen(true)}
-                                            className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-black font-semibold shadow-lg shadow-primary/20"
-                                        >
-                                            <Plus className="w-4 h-4 mr-2" />
-                                            Create First Project
-                                        </Button>
-                                    )}
-                                </CardContent>
-                            </Card>
+                    <TabsContent value="overview">
+                        {activeProject ? (
+                            <ProjectOverview project={activeProject} />
                         ) : (
-                            <div className="space-y-6">
-                                {room.projects.map((project) => (
-                                    <div key={project.id} className="group">
-                                        <Card className="bg-gradient-to-br from-black/90 to-black/70 border-white/20 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 overflow-hidden">
-                                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                            <CardHeader className="relative border-b border-white/10 pb-4">
-                                                <CardTitle className="text-white flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border border-primary/30">
-                                                            <LayoutDashboard className="w-5 h-5 text-primary" />
-                                                        </div>
-                                                        <div>
-                                                            <h3 className="text-xl font-bold">{project.name}</h3>
-                                                            <p className="text-sm text-white/50 font-normal mt-0.5">{project.description}</p>
-                                                        </div>
-                                                    </div>
-                                                    {project.isAIPlanGenerated ? (
-                                                        <Badge className="bg-gradient-to-r from-accent/20 to-accent/10 text-accent border-accent/30 gap-1.5">
-                                                            <Sparkles className="w-3.5 h-3.5" />
-                                                            AI Generated
-                                                        </Badge>
-                                                    ) : isPM && (
-                                                        <Button
-                                                            onClick={() => handleGenerateAI(room.id, project.id)}
-                                                            className="bg-gradient-to-r from-accent/20 to-accent/10 hover:from-accent/30 hover:to-accent/20 text-accent border border-accent/30 shadow-lg shadow-accent/10"
-                                                        >
-                                                            <Sparkles className="w-4 h-4 mr-2" />
-                                                            Generate AI Plan
-                                                        </Button>
-                                                    )}
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="relative pt-6">
-                                                {project.isAIPlanGenerated ? (
-                                                    <Tabs defaultValue="overview" className="w-full">
-                                                        <TabsList className="bg-white/5 border border-white/10 mb-6 w-full justify-start h-11 p-1 rounded-lg">
-                                                            <TabsTrigger
-                                                                value="overview"
-                                                                className="data-[state=active]:bg-white/10 h-full px-6 rounded-md data-[state=active]:shadow-lg font-medium"
-                                                            >
-                                                                Overview
-                                                            </TabsTrigger>
-                                                            <TabsTrigger
-                                                                value="epics"
-                                                                className="data-[state=active]:bg-white/10 h-full px-6 rounded-md data-[state=active]:shadow-lg font-medium"
-                                                            >
-                                                                Epics & Breakdown
-                                                            </TabsTrigger>
-                                                            <TabsTrigger
-                                                                value="analytics"
-                                                                className="data-[state=active]:bg-white/10 h-full px-6 rounded-md data-[state=active]:shadow-lg font-medium"
-                                                            >
-                                                                Analytics
-                                                            </TabsTrigger>
-                                                        </TabsList>
-                                                        <TabsContent value="overview">
-                                                            <ProjectOverview project={project} />
-                                                        </TabsContent>
-                                                        <TabsContent value="epics">
-                                                            <EpicsList project={project} />
-                                                        </TabsContent>
-                                                        <TabsContent value="analytics">
-                                                            <AnalyticsTab project={project} />
-                                                        </TabsContent>
-                                                    </Tabs>
-                                                ) : (
-                                                    <div className="text-center py-12 px-4">
-                                                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-                                                            <Sparkles className="w-8 h-8 text-white/20" />
-                                                        </div>
-                                                        <p className="text-white/50 text-lg">No plan generated yet. Generate an AI plan to see architecture, timeline, and epics.</p>
-                                                    </div>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                ))}
+                            <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                                <Sparkles className="w-16 h-16 mb-4 opacity-20" />
+                                <p>No active project plan to view overview.</p>
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="epics">
+                        {activeProject ? (
+                            <EpicsList project={activeProject} />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                                <Calendar className="w-16 h-16 mb-4 opacity-20" />
+                                <p>No active project plan to view epics.</p>
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="analytics">
+                        {activeProject ? (
+                            <AnalyticsTab project={activeProject} />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                                <AlertCircle className="w-16 h-16 mb-4 opacity-20" />
+                                <p>No active project plan to view analytics.</p>
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="activity">
+                        {activeProject ? (
+                            <ActivityTimeline tasks={activeProject.tasks} />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                                <Activity className="w-16 h-16 mb-4 opacity-20" />
+                                <p>No active project to view activity.</p>
                             </div>
                         )}
                     </TabsContent>

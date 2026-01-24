@@ -63,9 +63,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const markAllAsRead = () => {
-        // Option to implement backend bulk update
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    const markAllAsRead = async () => {
+        try {
+            await api.notifications.markAllRead();
+            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        } catch (error) {
+            console.error("Failed to mark all notifications as read:", error);
+        }
     };
 
     const clearAll = () => {

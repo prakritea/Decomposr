@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Cpu, AlignLeft } from "lucide-react";
 import { Project } from "@/types/project";
-import { ActivityTimeline } from "./ActivityTimeline";
 
 export function ProjectOverview({ project }: { project: Project }) {
     if (!project.isAIPlanGenerated) {
@@ -50,10 +49,6 @@ export function ProjectOverview({ project }: { project: Project }) {
                     </div>
                 </CardContent>
             </Card>
-
-            <div className="md:col-span-2">
-                <ActivityTimeline tasks={project.tasks} />
-            </div>
         </div>
     );
 }

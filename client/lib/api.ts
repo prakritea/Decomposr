@@ -41,5 +41,6 @@ export const api = {
     notifications: {
         getAll: () => fetchWithAuth("/notifications"),
         markRead: (id: string) => fetchWithAuth(`/notifications/${id}/read`, { method: "PATCH" }),
+        markAllRead: () => fetchWithAuth("/notifications/read-all", { method: "PATCH" }),
     }
 };

@@ -72,7 +72,7 @@ router.post("/join", authenticateToken, async (req: AuthRequest, res) => {
         });
 
         // Notify PM (Creator)
-        const user = await prisma.user.findUnique({
+        const joiningUser = await prisma.user.findUnique({
             where: { id: userId },
             select: { name: true }
         });
@@ -81,7 +81,7 @@ router.post("/join", authenticateToken, async (req: AuthRequest, res) => {
             userId: room.creatorId,
             type: "room_joined",
             title: "New Member",
-            message: `${user?.name || "Someone"} joined your room ${room.name}`,
+            message: `${joiningUser?.name && !joiningUser.name.startsWith('cmk') ? joiningUser.name : "A new member"} joined your room ${room.name}`,
             link: `/rooms/${room.id}`
         });
 
