@@ -1,16 +1,12 @@
 import { prisma } from "../lib/prisma";
 import { authenticateToken, AuthRequest } from "../middleware/auth";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { Router } from "express";
 import { createNotification } from "../index";
 
 const router = Router();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    generationConfig: {
-        responseMimeType: "application/json",
-    }
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || "",
 });
 
 // Create Project (PM Only)
@@ -170,9 +166,23 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         4. Descriptions must be technical and professional.
         5. Output ONLY raw JSON.`;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a world-class Technical Product Manager and Lead Software Architect. You generate detailed project plans in JSON format."
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.7,
+        });
+
+        const text = completion.choices[0]?.message?.content || "{}";
 
         // Safe JSON parse with improved extraction
         let aiOutput;

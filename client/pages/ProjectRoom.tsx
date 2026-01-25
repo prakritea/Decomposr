@@ -33,7 +33,7 @@ import { Project, Task, TaskStatus } from "@/types/project";
 
 export default function ProjectRoom() {
     const { roomId } = useParams<{ roomId: string }>();
-    const { getRoom, generateAIPlan, assignTask, updateTaskStatus, refreshRooms } = useRooms();
+    const { getRoom, generateAIPlan, assignTask, updateTaskStatus, refreshRooms, createProject } = useRooms();
     const { user } = useAuth();
     const { toast } = useToast();
     const [room, setRoom] = useState<RoomData | null>(null);
@@ -288,16 +288,40 @@ export default function ProjectRoom() {
                             <div className="flex flex-col items-center justify-center py-20">
                                 <Card className="bg-black/50 border-white/10 backdrop-blur-xl border-dashed p-10 text-center max-w-lg">
                                     <Sparkles className="w-12 h-12 text-primary mx-auto mb-6 opacity-50" />
-                                    <h3 className="text-xl font-bold text-white mb-2">Kickstart Your Vision</h3>
+                                    <h3 className="text-xl font-bold text-white mb-2">Generate with AI</h3>
                                     <p className="text-white/60 mb-8">
-                                        You haven't defined any projects in this room yet. Let AI help you structure your ideas into a concrete plan.
+                                        Transform your project idea into a complete execution plan with Executive Summary, Architecture & Stack, Timeline, Epics, and Kanban board—all powered by AI.
                                     </p>
                                     <Button
-                                        onClick={() => setProjectModalOpen(true)}
+                                        onClick={async () => {
+                                            try {
+                                                setIsLoading(true);
+                                                // Create project using room data
+                                                const project = await createProject(room.id, room.name, room.description);
+                                                // Generate AI plan
+                                                await generateAIPlan(room.id, project.id);
+                                                // Refresh to show the new project
+                                                await fetchRoom();
+                                            } catch (error) {
+                                                console.error('Failed to generate project:', error);
+                                            } finally {
+                                                setIsLoading(false);
+                                            }
+                                        }}
+                                        disabled={isLoading}
                                         className="bg-primary hover:bg-primary/90 text-black font-bold h-12 px-8 rounded-xl"
                                     >
-                                        <Plus className="w-5 h-5 mr-2" />
-                                        Initialize First Project
+                                        {isLoading ? (
+                                            <>
+                                                <div className="w-5 h-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                                Generating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="w-5 h-5 mr-2" />
+                                                Generate with AI
+                                            </>
+                                        )}
                                     </Button>
                                 </Card>
                             </div>
@@ -414,6 +438,8 @@ export default function ProjectRoom() {
                 open={projectModalOpen}
                 onOpenChange={setProjectModalOpen}
                 roomId={room.id}
+                roomName={room.name}
+                roomDescription={room.description}
             />
         </div>
     );
