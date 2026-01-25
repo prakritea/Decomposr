@@ -114,6 +114,7 @@ model Task {
   status       TaskStatus   @default(todo)
   priority     TaskPriority @default(medium)
   category     String?      // e.g., Frontend, Backend, Testing
+  ownerRole    String?      // e.g., "Backend Lead", "UI Designer"
   effort       String?      // e.g., "3 hours", "2 days"
   dependencies String?      // Description of dependencies
   dueDate      DateTime

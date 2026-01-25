@@ -31,6 +31,7 @@ export const api = {
         join: (data: any) => fetchWithAuth("/rooms/join", { method: "POST", body: JSON.stringify(data) }),
         getUserRooms: () => fetchWithAuth("/rooms/user-rooms"),
         getDetails: (id: string) => fetchWithAuth(`/rooms/${id}`),
+        delete: (id: string) => fetchWithAuth(`/rooms/${id}`, { method: "DELETE" }),
     },
     projects: {
         create: (roomId: string, data: any) => fetchWithAuth(`/projects/${roomId}/projects`, { method: "POST", body: JSON.stringify(data) }),

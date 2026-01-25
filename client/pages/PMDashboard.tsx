@@ -2,7 +2,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRooms } from "@/contexts/RoomsContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Aurora from "@/components/ui/Aurora";
 import {
     Users,
@@ -20,7 +23,11 @@ import { ActivityTimeline } from "@/components/rooms/ActivityTimeline";
 
 export default function PMDashboard() {
     const { user } = useAuth();
-    const { userRooms } = useRooms();
+    const { userRooms, createRoom } = useRooms();
+    const [newName, setNewName] = useState("");
+    const [newDescription, setNewDescription] = useState("");
+    const [isCreating, setIsCreating] = useState(false);
+    const navigate = useNavigate();
 
     const allTasks = userRooms.flatMap(r => (r.projects || []).flatMap(p => p.tasks || []));
     const completedTasks = allTasks.filter(t => t.status === 'done').length;
@@ -82,22 +89,60 @@ export default function PMDashboard() {
                         <CardHeader>
                             <CardTitle className="text-white flex items-center gap-2">
                                 <Plus className="w-5 h-5 text-primary" />
-                                Create New Room
+                                Start New Project
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="relative z-10">
-                            <p className="text-white/60 mb-6">
-                                Start a new workspace for your team. You can invite members and create projects inside the room.
-                            </p>
-                            <Button
-                                asChild
-                                className="w-full bg-primary hover:bg-primary/90 text-black font-bold"
+                            <form
+                                onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    if (!newName.trim()) return;
+                                    try {
+                                        setIsCreating(true);
+                                        const room = await createRoom(newName, newDescription);
+                                        setNewName("");
+                                        setNewDescription("");
+                                        navigate(`/rooms/${room.id}`);
+                                    } finally {
+                                        setIsCreating(false);
+                                    }
+                                }}
+                                className="space-y-4"
                             >
-                                <Link to="/rooms">
-                                    Get Started
-                                    <ArrowRight className="w-4 h-4 ml-2" />
-                                </Link>
-                            </Button>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/60">Project Name</label>
+                                    <Input
+                                        placeholder="e.g. My Awesome Project"
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/60">Description (Idea)</label>
+                                    <Textarea
+                                        placeholder="Brief description of your vision..."
+                                        value={newDescription}
+                                        onChange={(e) => setNewDescription(e.target.value)}
+                                        className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[80px]"
+                                    />
+                                </div>
+                                <Button
+                                    type="submit"
+                                    disabled={isCreating}
+                                    className="w-full bg-primary hover:bg-primary/90 text-black font-bold"
+                                >
+                                    {isCreating ? (
+                                        "Creating..."
+                                    ) : (
+                                        <>
+                                            Start Now
+                                            <ArrowRight className="w-4 h-4 ml-2" />
+                                        </>
+                                    )}
+                                </Button>
+                            </form>
                         </CardContent>
                     </Card>
 
@@ -106,12 +151,12 @@ export default function PMDashboard() {
                         <CardHeader>
                             <CardTitle className="text-white flex items-center gap-2">
                                 <Search className="w-5 h-5 text-accent" />
-                                View Existing Rooms
+                                Monitor Projects
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="relative z-10">
                             <p className="text-white/60 mb-6">
-                                Access your active project rooms, manage members, and track project progress.
+                                Track progress across all your active projects and manage your team.
                             </p>
                             <Button
                                 asChild
@@ -119,7 +164,7 @@ export default function PMDashboard() {
                                 className="w-full border-white/20 text-white hover:bg-white/10"
                             >
                                 <Link to="/rooms">
-                                    Open Rooms
+                                    Open Projects
                                     <ArrowRight className="w-4 h-4 ml-2" />
                                 </Link>
                             </Button>

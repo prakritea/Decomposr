@@ -7,7 +7,7 @@ import { createNotification } from "../index";
 const router = Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.0-flash",
     generationConfig: {
         responseMimeType: "application/json",
     }
@@ -128,49 +128,73 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         const project = await prisma.project.findUnique({ where: { id: projectId } });
         if (!project) return res.status(404).json({ message: "Project not found" });
 
-        // AI Prompt
-        const prompt = `You are an expert Technical Product Manager and Software Architect.
-        Given a project idea, generate a comprehensive implementation plan stringified as a JSON object.
-        
-        Project Idea: "${project.name}" - ${project.description}
+        // Clean slate: Delete existing tasks and epics before regenerating
+        await prisma.task.deleteMany({ where: { projectId } });
+        await prisma.epic.deleteMany({ where: { projectId } });
 
-        Required JSON Structure:
+        // AI Prompt
+        const prompt = `You are a world-class Technical Product Manager and Lead Software Architect.
+        Decompose the following project into a high-fidelity implementation plan.
+        
+        Project: "${project.name}"
+        Goal: ${project.description}
+
+        Your output must be a strictly valid JSON object following this schema:
         {
-            "summary": "High-level executive summary of the project",
-            "architecture": "Brief description of the recommended tech stack and architecture",
-            "timeline": "Estimated timestamp (e.g., '4 weeks')",
+            "summary": "A high-level executive summary (2-3 paragraphs) explaining the value proposition and core objectives.",
+            "architecture": "A detailed technical breakdown of the stack, patterns (e.g., MVC, Microservices), and infrastructure.",
+            "timeline": "A realistic estimation (e.g., '12 weeks').",
             "epics": [
                 {
-                    "name": "Epic Title (e.g., Authentication, Core Features)",
-                    "description": "Description of this module",
+                    "name": "High-level Epic Title (e.g., 'User Identity & Security')",
+                    "description": "The strategic goal of this epic.",
                     "tasks": [
                         {
-                            "title": "Task Title",
-                            "description": "Detailed implementation steps",
+                            "title": "Specific, actionable task title",
+                            "description": "Technical implementation details, including specific libraries or patterns to use.",
                             "priority": "low|medium|high|urgent",
-                            "category": "Frontend|Backend|Database|DevOps|Testing",
-                            "effort": "Estimated effort (e.g., '3 hours', '2 days')",
-                            "dependencies": "List of dependencies or 'None'"
+                            "category": "Backend|Frontend|Database|DevOps|Integration|Security",
+                            "ownerRole": "e.g., 'Backend Lead', 'UI Designer', 'DevOps Specialist'",
+                            "effort": "e.g., '4-6 hours'",
+                            "dependencies": "Title of the prerequisite task or 'None'"
                         }
                     ]
                 }
             ]
         }
         
-        Ensure the output is strictly valid JSON. Generate at least 3-4 epics with multiple tasks each.`;
+        Rules:
+        1. Generate exactly 4-6 strategic Epics.
+        2. Within each Epic, provide at least 5-8 tasks.
+        3. Ensure tasks are logically grouped by their 'category'.
+        4. Descriptions must be technical and professional.
+        5. Output ONLY raw JSON.`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
 
-        // Safe JSON parse
+        // Safe JSON parse with improved extraction
         let aiOutput;
         try {
-            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            // Remove markdown code blocks if they exist
+            let cleanText = text.trim();
+            if (cleanText.includes("```")) {
+                const parts = cleanText.split("```");
+                // Find the part that looks like JSON or is between the first set of backticks
+                for (let part of parts) {
+                    part = part.trim();
+                    if (part.startsWith("json")) part = part.substring(4).trim();
+                    if (part.startsWith("{") && part.endsWith("}")) {
+                        cleanText = part;
+                        break;
+                    }
+                }
+            }
             aiOutput = JSON.parse(cleanText);
         } catch (e) {
             console.error("Failed to parse AI output:", text);
-            return res.status(500).json({ message: "Failed to parse AI plan" });
+            return res.status(500).json({ message: "Failed to parse AI plan. Please try again." });
         }
 
         // Update Project Metadata
@@ -201,6 +225,7 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
                         description: task.description,
                         priority: (task.priority || 'medium').toLowerCase(),
                         category: task.category,
+                        ownerRole: task.ownerRole,
                         effort: task.effort,
                         dependencies: task.dependencies,
                         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 1 week

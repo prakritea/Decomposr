@@ -44,18 +44,18 @@ export function CreateRoomModal({ open, onOpenChange, onCreateRoom }: CreateRoom
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="bg-black/95 border-white/10 text-white">
                 <DialogHeader>
-                    <DialogTitle>Create Project Room</DialogTitle>
+                    <DialogTitle>Start a New Project</DialogTitle>
                     <DialogDescription className="text-white/60">
-                        Create a collaborative space for your team
+                        Define your vision and let AI help you decompose it into tasks
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">Room Name</Label>
+                            <Label htmlFor="name">Project Name</Label>
                             <Input
                                 id="name"
-                                placeholder="e.g., Food Delivery App"
+                                placeholder="e.g., E-commerce Platform"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
@@ -63,10 +63,10 @@ export function CreateRoomModal({ open, onOpenChange, onCreateRoom }: CreateRoom
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="description">Description</Label>
+                            <Label htmlFor="description">Description (Idea)</Label>
                             <Textarea
                                 id="description"
-                                placeholder="Brief description of the project..."
+                                placeholder="Describe your project idea... We'll generate the architecture and tasks."
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 className="bg-white/5 border-white/10 text-white min-h-24"
@@ -93,7 +93,7 @@ export function CreateRoomModal({ open, onOpenChange, onCreateRoom }: CreateRoom
                                     Creating...
                                 </>
                             ) : (
-                                "Create Room"
+                                "Start Project"
                             )}
                         </Button>
                     </DialogFooter>

@@ -29,6 +29,13 @@ router.post("/create", authenticateToken, async (req: AuthRequest, res) => {
                         userId: userId!,
                         role: "pm" as UserRole,
                     }
+                },
+                projects: {
+                    create: {
+                        name: name,
+                        description: description,
+                        isAIPlanGenerated: false
+                    }
                 }
             },
             include: {
@@ -132,6 +139,45 @@ router.get("/:id", authenticateToken, async (req: AuthRequest, res) => {
         res.json(room);
     } catch (error) {
         res.status(500).json({ message: "Error fetching room details" });
+    }
+});
+
+// Delete Room (PM Only)
+router.delete("/:id", authenticateToken, async (req: AuthRequest, res) => {
+    const id = req.params.id as string;
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+
+    if (userRole !== "pm") {
+        return res.status(403).json({ message: "Only Product Managers can delete rooms" });
+    }
+
+    try {
+        const room = await prisma.room.findUnique({ where: { id } });
+        if (!room) return res.status(404).json({ message: "Room not found" });
+
+        if (room.creatorId !== userId) {
+            return res.status(403).json({ message: "Only the creator can delete this room" });
+        }
+
+        // Delete all associated data
+        // Order matters if no cascade: tasks -> epics -> projects -> members -> room
+        // But since we want "Clean Slate", we might have complex relations.
+        // Prisma cascade delete on the model level is preferred. 
+        // Based on schema.prisma, relations don't have explicit cascade, so we do it manually.
+
+        await prisma.task.deleteMany({ where: { project: { roomId: id } } });
+        await prisma.epic.deleteMany({ where: { project: { roomId: id } } });
+        await prisma.project.deleteMany({ where: { roomId: id } });
+        await prisma.roomMember.deleteMany({ where: { roomId: id } });
+        await prisma.notification.deleteMany({ where: { link: { contains: `/rooms/${id}` } } });
+
+        await prisma.room.delete({ where: { id } });
+
+        res.json({ message: "Room deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting room:", error);
+        res.status(500).json({ message: "Error deleting room" });
     }
 });
 

@@ -18,6 +18,7 @@ interface RoomsContextType {
     updateTaskStatus: (roomId: string, projectId: string, taskId: string, status: TaskStatus) => Promise<Task>;
     updateTask: (roomId: string, projectId: string, taskId: string, data: Partial<Task>) => Promise<Task>;
     getEmployeeTasks: () => Task[];
+    deleteRoom: (id: string) => Promise<void>;
 }
 
 const RoomsContext = createContext<RoomsContextType | undefined>(undefined);
@@ -162,6 +163,16 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         );
     };
 
+    const deleteRoom = async (id: string): Promise<void> => {
+        try {
+            await api.rooms.delete(id);
+            await refreshRooms();
+            toast({ title: "Project deleted", description: "The project and all its data have been removed." });
+        } catch (error) {
+            toast({ title: "Error", description: "Could not delete project", variant: "destructive" });
+        }
+    };
+
     return (
         <RoomsContext.Provider
             value={{
@@ -177,6 +188,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
                 updateTaskStatus,
                 updateTask,
                 getEmployeeTasks,
+                deleteRoom,
             }}
         >
             {children}

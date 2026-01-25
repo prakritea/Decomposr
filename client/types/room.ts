@@ -6,6 +6,7 @@ export interface ProjectRoom {
     name: string;
     description: string;
     inviteCode: string;
+    creatorId: string;
     createdBy: string;
     createdAt: Date;
     members: RoomMember[];
@@ -17,7 +18,7 @@ export interface RoomMember {
     userId: string;
     user: User;
     joinedAt: Date;
-    role: "owner" | "member";
+    role: "pm" | "employee" | "owner" | "member";
 }
 
 export interface RoomInvitation {

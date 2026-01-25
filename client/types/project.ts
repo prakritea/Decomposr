@@ -22,6 +22,7 @@ export interface Task {
     status: TaskStatus;
     priority: TaskPriority;
     category?: string;
+    ownerRole?: string;
     effort?: string;
     dependencies?: string;
     createdAt: Date | string;

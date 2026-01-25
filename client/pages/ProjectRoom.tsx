@@ -170,15 +170,6 @@ export default function ProjectRoom() {
                             <p className="text-white/70 text-lg max-w-3xl leading-relaxed">{room.description}</p>
                         </div>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                            {isPM && (
-                                <Button
-                                    onClick={() => setProjectModalOpen(true)}
-                                    className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-black font-semibold shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30"
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    New Project
-                                </Button>
-                            )}
                             <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-xl p-3 backdrop-blur-sm">
                                 <div className="flex items-center gap-3">
                                     <div className="flex flex-col">
@@ -198,37 +189,51 @@ export default function ProjectRoom() {
                         </div>
                     </div>
 
-                    {/* Stats Overview */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 backdrop-blur-sm">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-medium text-purple-300/80 uppercase tracking-wide">Tasks</span>
-                                    <ListTodo className="w-4 h-4 text-purple-400/60" />
-                                </div>
-                                <div className="text-2xl font-bold text-white">
-                                    {room.projects.reduce((sum, p) => sum + p.tasks.length, 0)}
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 backdrop-blur-sm">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-medium text-green-300/80 uppercase tracking-wide">Completed</span>
-                                    <CheckCircle2 className="w-4 h-4 text-green-400/60" />
-                                </div>
-                                <div className="text-2xl font-bold text-white">
-                                    {room.projects.reduce((sum, p) => sum + p.tasks.filter(t => t.status === 'done').length, 0)}
+                    {/* Stats Overview - Zomato Style */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <Card className="bg-[#1a1a2e]/80 border-white/5 backdrop-blur-xl group hover:border-purple-500/30 transition-all">
+                            <CardContent className="p-6">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-purple-400/60 uppercase tracking-widest mb-1">Tasks</p>
+                                        <div className="text-4xl font-bold text-white leading-none">
+                                            {room.projects.reduce((sum, p) => sum + p.tasks.length, 0)}
+                                        </div>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform">
+                                        <ListTodo className="w-5 h-5 text-purple-400" />
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20 backdrop-blur-sm">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-medium text-orange-300/80 uppercase tracking-wide">Members</span>
-                                    <Users className="w-4 h-4 text-orange-400/60" />
+
+                        <Card className="bg-[#1a2e2a]/80 border-white/5 backdrop-blur-xl group hover:border-green-500/30 transition-all">
+                            <CardContent className="p-6">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-green-400/60 uppercase tracking-widest mb-1">Completed</p>
+                                        <div className="text-4xl font-bold text-white leading-none">
+                                            {room.projects.reduce((sum, p) => sum + p.tasks.filter(t => t.status === 'done').length, 0)}
+                                        </div>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center border border-green-500/20 group-hover:scale-110 transition-transform">
+                                        <CheckCircle2 className="w-5 h-5 text-green-400" />
+                                    </div>
                                 </div>
-                                <div className="text-2xl font-bold text-white">{room.members.length}</div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-[#2e241a]/80 border-white/5 backdrop-blur-xl group hover:border-orange-500/30 transition-all lg:col-span-1">
+                            <CardContent className="p-6">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-orange-400/60 uppercase tracking-widest mb-1">Members</p>
+                                        <div className="text-4xl font-bold text-white leading-none">{room.members.length}</div>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center border border-orange-500/20 group-hover:scale-110 transition-transform">
+                                        <Users className="w-5 h-5 text-orange-400" />
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -275,11 +280,26 @@ export default function ProjectRoom() {
 
                     <TabsContent value="overview">
                         {activeProject ? (
-                            <ProjectOverview project={activeProject} />
+                            <ProjectOverview
+                                project={activeProject}
+                                onGenerate={() => handleGenerateAI(room.id, activeProject.id)}
+                            />
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-20 text-white/40">
-                                <Sparkles className="w-16 h-16 mb-4 opacity-20" />
-                                <p>No active project plan to view overview.</p>
+                            <div className="flex flex-col items-center justify-center py-20">
+                                <Card className="bg-black/50 border-white/10 backdrop-blur-xl border-dashed p-10 text-center max-w-lg">
+                                    <Sparkles className="w-12 h-12 text-primary mx-auto mb-6 opacity-50" />
+                                    <h3 className="text-xl font-bold text-white mb-2">Kickstart Your Vision</h3>
+                                    <p className="text-white/60 mb-8">
+                                        You haven't defined any projects in this room yet. Let AI help you structure your ideas into a concrete plan.
+                                    </p>
+                                    <Button
+                                        onClick={() => setProjectModalOpen(true)}
+                                        className="bg-primary hover:bg-primary/90 text-black font-bold h-12 px-8 rounded-xl"
+                                    >
+                                        <Plus className="w-5 h-5 mr-2" />
+                                        Initialize First Project
+                                    </Button>
+                                </Card>
                             </div>
                         )}
                     </TabsContent>

@@ -40,7 +40,7 @@ export default function Rooms() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Project Rooms</h1>
+                        <h1 className="text-3xl font-bold text-white mb-2">Projects</h1>
                         <p className="text-white/60">
                             {isPM
                                 ? "Create and manage collaborative spaces for your team"
@@ -48,15 +48,6 @@ export default function Rooms() {
                         </p>
                     </div>
                     <div className="flex gap-3">
-                        {isPM && (
-                            <Button
-                                onClick={() => setCreateModalOpen(true)}
-                                className="bg-gradient-to-r from-[#60ff50] to-[#a64dff] hover:opacity-90 text-black font-bold"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Create Room
-                            </Button>
-                        )}
                         {!isPM && (
                             <Button
                                 onClick={() => setJoinModalOpen(true)}
@@ -81,10 +72,10 @@ export default function Rooms() {
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-4">
                             <UsersIcon className="w-8 h-8 text-white/40" />
                         </div>
-                        <h3 className="text-xl font-semibold text-white mb-2">No project rooms yet</h3>
+                        <h3 className="text-xl font-semibold text-white mb-2">No projects yet</h3>
                         <p className="text-white/60 mb-6">
                             {isPM
-                                ? "Create your first project room to start collaborating"
+                                ? "Start your first project to begin collaborating"
                                 : "Join a room using an invite code to get started"}
                         </p>
                         {isPM ? (
@@ -93,7 +84,7 @@ export default function Rooms() {
                                 className="bg-gradient-to-r from-[#60ff50] to-[#a64dff] hover:opacity-90 text-black font-bold"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
-                                Create Your First Room
+                                Start Your First Project
                             </Button>
                         ) : (
                             <Button
