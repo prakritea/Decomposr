@@ -6,8 +6,37 @@ import { createNotification } from "../index";
 
 const router = Router();
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || "",
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: process.env.OPENROUTER_API_KEY || "",
+    defaultHeaders: {
+        "HTTP-Referer": "https://decomposr.ai",
+        "X-Title": "Decomposr",
+    },
 });
+
+async function generateWithRetry(model: string, messages: any[], maxRetries = 3) {
+    let lastError: any;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const completion = await openai.chat.completions.create({
+                model,
+                messages,
+                temperature: 0.7,
+            });
+            return completion;
+        } catch (error: any) {
+            lastError = error;
+            if (error.status === 429) {
+                const waitTime = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                console.log(`Rate limited. Retrying in ${Math.round(waitTime)}ms... (Attempt ${i + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                continue;
+            }
+            throw error;
+        }
+    }
+    throw lastError;
+}
 
 // Create Project (PM Only)
 router.post("/:roomId/projects", authenticateToken, async (req: AuthRequest, res) => {
@@ -166,9 +195,9 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         4. Descriptions must be technical and professional.
         5. Output ONLY raw JSON.`;
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
+        const completion = await generateWithRetry(
+            process.env.AI_MODEL_NAME || "gpt-4o",
+            [
                 {
                     role: "system",
                     content: "You are a world-class Technical Product Manager and Lead Software Architect. You generate detailed project plans in JSON format."
@@ -177,10 +206,8 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
                     role: "user",
                     content: prompt
                 }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.7,
-        });
+            ]
+        );
 
         const text = completion.choices[0]?.message?.content || "{}";
 
@@ -257,7 +284,7 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         console.error("AI Generation Error:", error);
         if (error.status === 429) {
             return res.status(429).json({
-                message: "Gemini API rate limit exceeded. Please wait a moment before trying again.",
+                message: "AI provider rate limit exceeded. Please wait a moment before trying again.",
                 retryAfter: error.errorDetails?.find((d: any) => d.retryDelay)?.retryDelay
             });
         }

@@ -12,7 +12,7 @@ services:
         sync: false # Set manually in Render Dashboard to your Supabase URL
       - key: JWT_SECRET
         generateValue: true
-      - key: GEMINI_API_KEY
+      - key: OPENROUTER_API_KEY
         sync: false # Set manually in Render Dashboard
       - key: NODE_ENV
         value: production

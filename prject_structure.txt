@@ -1,6 +1,8 @@
 prakriti@Prakritis-MacBook-Air architect-ai-dashboard-cee % tree
 .
-├── AGENTS.md
+├── LICENSE
+├── README.md
+├── check_users.ts
 ├── client
 │   ├── App.tsx
 │   ├── components
@@ -8,31 +10,38 @@ prakriti@Prakritis-MacBook-Air architect-ai-dashboard-cee % tree
 │   │   │   ├── EpicCard.tsx
 │   │   │   ├── KanbanBoard.tsx
 │   │   │   ├── LoadingSpinner.tsx
-│   │   │   └── TaskCard.tsx
+│   │   │   ├── TaskCard.tsx
+│   │   │   └── TaskDetailSheet.tsx
 │   │   ├── docs
 │   │   │   ├── DocsLayout.tsx
 │   │   │   ├── DocsSearch.tsx
 │   │   │   └── DocsSidebar.tsx
 │   │   ├── layout
 │   │   │   ├── Footer.tsx
-│   │   │   └── Navbar.tsx
+│   │   │   ├── Navbar.tsx
+│   │   │   └── ScrollToTop.tsx
 │   │   ├── notifications
 │   │   │   ├── NotificationBell.tsx
 │   │   │   ├── NotificationItem.tsx
 │   │   │   └── NotificationPanel.tsx
 │   │   ├── rooms
+│   │   │   ├── ActivityTimeline.tsx
+│   │   │   ├── AnalyticsTab.tsx
 │   │   │   ├── CreateProjectModal.tsx
 │   │   │   ├── CreateRoomModal.tsx
+│   │   │   ├── EpicsList.tsx
 │   │   │   ├── JoinRoomModal.tsx
+│   │   │   ├── KanbanBoard.tsx
+│   │   │   ├── ProjectOverview.tsx
 │   │   │   ├── RoomCard.tsx
 │   │   │   └── TaskBoard.tsx
 │   │   └── ui
+│   │       ├── Aurora.css
+│   │       ├── Aurora.tsx
 │   │       ├── accordion.tsx
 │   │       ├── alert-dialog.tsx
 │   │       ├── alert.tsx
 │   │       ├── aspect-ratio.tsx
-│   │       ├── Aurora.css
-│   │       ├── Aurora.tsx
 │   │       ├── avatar.tsx
 │   │       ├── badge.tsx
 │   │       ├── breadcrumb.tsx
@@ -88,10 +97,8 @@ prakriti@Prakritis-MacBook-Air architect-ai-dashboard-cee % tree
 │   │   └── use-toast.ts
 │   ├── lib
 │   │   ├── api.ts
-│   │   ├── mockAuth.ts
 │   │   ├── mockData
 │   │   ├── mockData.ts
-│   │   ├── mockRooms.ts
 │   │   ├── utils.spec.ts
 │   │   └── utils.ts
 │   ├── main.tsx
@@ -107,6 +114,7 @@ prakriti@Prakritis-MacBook-Air architect-ai-dashboard-cee % tree
 │   │   ├── Profile.tsx
 │   │   ├── ProjectRoom.tsx
 │   │   ├── Rooms.tsx
+│   │   ├── Settings.tsx
 │   │   └── Signup.tsx
 │   ├── types
 │   │   ├── auth.ts
@@ -115,8 +123,26 @@ prakriti@Prakritis-MacBook-Air architect-ai-dashboard-cee % tree
 │   │   └── room.ts
 │   └── vite-env.d.ts
 ├── components.json
+├── dist
+│   ├── server
+│   │   ├── favicon.ico
+│   │   ├── node-build.mjs
+│   │   ├── node-build.mjs.map
+│   │   ├── placeholder.svg
+│   │   └── robots.txt
+│   └── spa
+│       ├── assets
+│       │   ├── index-BkgOPSHT.js
+│       │   └── index-CBF_3tIE.css
+│       ├── favicon.ico
+│       ├── index.html
+│       ├── placeholder.svg
+│       └── robots.txt
+├── docs
+│   └── images
+│       └── landing-hero.png
+├── fix_notifications.ts
 ├── index.html
-├── LICENSE
 ├── netlify
 │   └── functions
 │       └── api.ts
@@ -126,13 +152,20 @@ prakriti@Prakritis-MacBook-Air architect-ai-dashboard-cee % tree
 ├── pnpm-lock.yaml
 ├── postcss.config.js
 ├── prisma
+│   ├── migrations
+│   │   ├── 20260120124805_add_epics_and_metadata
+│   │   │   └── migration.sql
+│   │   ├── 20260121135414_add_analytics_fields
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
 │   └── schema.prisma
 ├── prisma.config.ts
+├── prject_structure.txt
 ├── public
 │   ├── favicon.ico
 │   ├── placeholder.svg
 │   └── robots.txt
-├── README.md
+├── render.yaml
 ├── server
 │   ├── index.ts
 │   ├── lib
@@ -142,15 +175,15 @@ prakriti@Prakritis-MacBook-Air architect-ai-dashboard-cee % tree
 │   ├── node-build.ts
 │   └── routes
 │       ├── auth.ts
-│       ├── demo.ts
 │       ├── notifications.ts
 │       ├── projects.ts
 │       └── rooms.ts
 ├── shared
 │   └── api.ts
 ├── tailwind.config.ts
+├── tsconfig.base.json
+├── tsconfig.client.json
 ├── tsconfig.json
+├── tsconfig.server.json
 ├── vite.config.server.ts
 └── vite.config.ts
-
-24 directories, 129 files

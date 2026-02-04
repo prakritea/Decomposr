@@ -31,7 +31,7 @@ Decomposr is a full-stack collaborative platform that revolutionizes product man
 - Receive real-time notifications for task assignments and updates
 
 ### 🤖 AI-Powered Task Generation
-- **Powered by Google Gemini** (Pro/Flash models with free tier support)
+- **Powered by OpenRouter** (using Qwen/other premium models)
 - Intelligent project decomposition: Describe your idea (e.g., "Build a React Authentication Flow with OAuth")
 - AI generates:
   - **Structured task breakdown** (5-15 actionable tasks)
@@ -112,7 +112,7 @@ Decomposr is a full-stack collaborative platform that revolutionizes product man
 | **Socket.io** | Real-time bidirectional communication |
 | **JWT** | Stateless authentication |
 | **bcryptjs** | Password hashing |
-| **Google Generative AI** | AI task generation (Gemini) |
+| **OpenRouter API** | AI task generation |
 
 ### DevOps & Tools
 - **pnpm** - Fast, disk space efficient package manager
@@ -161,7 +161,7 @@ Epic ──→ tasks → Task
 1. PM creates project with description
 2. Frontend triggers AI generation request
 3. Backend constructs prompt with project context
-4. Google Gemini API processes request
+4. OpenRouter API processes request
 5. AI returns structured JSON:
    - Summary
    - Architecture recommendations
@@ -204,7 +204,7 @@ Ensure you have the following installed:
 - **Node.js** (v18 or higher) - [Download](https://nodejs.org/)
 - **PostgreSQL** (v14 or higher) - [Download](https://www.postgresql.org/download/)
 - **pnpm** (recommended) - `npm install -g pnpm`
-- **Google Gemini API Key** - Free tier available at [Google AI Studio](https://aistudio.google.com/)
+- **OpenRouter API Key** - Available at [OpenRouter](https://openrouter.ai/)
 
 ### Installation
 
@@ -232,7 +232,8 @@ Ensure you have the following installed:
    JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
    
    # AI Integration
-   GEMINI_API_KEY="your-gemini-api-key-from-google-ai-studio"
+   OPENROUTER_API_KEY="your-openrouter-api-key"
+   AI_MODEL_NAME="qwen/qwen3-next-80b-a3b-instruct:free"
    
    # Server (optional)
    PORT=5000
@@ -360,7 +361,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🙏 Acknowledgments
 
-- **Google Gemini** for powerful AI capabilities
+- **OpenRouter** for powerful AI capabilities
 - **Shadcn UI** for beautiful, accessible components
 - **Prisma** for excellent database tooling
 - **Socket.io** for real-time communication

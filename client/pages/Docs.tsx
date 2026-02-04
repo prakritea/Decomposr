@@ -27,7 +27,7 @@ export default function Docs() {
                                 </CardHeader>
                                 <CardContent className="text-white/70 space-y-2">
                                     <p>1. <strong>Describe:</strong> Enter your project idea in natural language.</p>
-                                    <p>2. <strong>Analyze:</strong> Our Google Gemini-powered AI agents decompose the idea into Epics and Tasks.</p>
+                                    <p>2. <strong>Analyze:</strong> Our OpenRouter-powered AI agents decompose the idea into Epics and Tasks.</p>
                                     <p>3. <strong>Plan:</strong> Review generated roles, timelines, and kanban boards.</p>
                                 </CardContent>
                             </Card>
