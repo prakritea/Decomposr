@@ -210,6 +210,7 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         );
 
         const text = completion.choices[0]?.message?.content || "{}";
+        console.log("Raw AI Response:", text);
 
         // Safe JSON parse with improved extraction
         let aiOutput;
@@ -229,6 +230,7 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
                 }
             }
             aiOutput = JSON.parse(cleanText);
+            console.log("Parsed AI Output:", JSON.stringify(aiOutput, null, 2));
         } catch (e) {
             console.error("Failed to parse AI output:", text);
             return res.status(500).json({ message: "Failed to parse AI plan. Please try again." });
@@ -246,7 +248,9 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         });
 
         // Create Epics and Tasks
+        console.log(`Creating ${aiOutput.epics.length} epics...`);
         for (const epicData of aiOutput.epics) {
+            console.log(`Creating epic: ${epicData.name}`);
             const epic = await prisma.epic.create({
                 data: {
                     name: epicData.name,
@@ -256,22 +260,33 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
             });
 
             if (epicData.tasks && epicData.tasks.length > 0) {
+                console.log(`Creating ${epicData.tasks.length} tasks for epic: ${epicData.name}`);
                 await prisma.task.createMany({
-                    data: epicData.tasks.map((task: any) => ({
-                        title: task.title,
-                        description: task.description,
-                        priority: (task.priority || 'medium').toLowerCase(),
-                        category: task.category,
-                        ownerRole: task.ownerRole,
-                        effort: task.effort,
-                        dependencies: task.dependencies,
-                        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 1 week
-                        projectId: projectId,
-                        epicId: epic.id
-                    }))
+                    data: epicData.tasks.map((task: any) => {
+                        // Map AI priorities to schema enums
+                        let priority = (task.priority || 'medium').toLowerCase();
+                        if (priority === 'critical') priority = 'urgent';
+                        if (!['low', 'medium', 'high', 'urgent'].includes(priority)) priority = 'medium';
+
+                        return {
+                            title: task.title,
+                            description: task.description,
+                            priority: priority as any,
+                            category: task.category,
+                            ownerRole: task.ownerRole,
+                            effort: task.effort,
+                            dependencies: task.dependencies,
+                            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 1 week
+                            projectId: projectId,
+                            epicId: epic.id
+                        };
+                    })
                 });
+            } else {
+                console.warn(`No tasks found for epic: ${epicData.name}`);
             }
         }
+        console.log("All epics and tasks created successfully.");
 
         // Return full project structure
         const updatedProject = await prisma.project.findUnique({
