@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, AlertCircle, CheckCircle2, MoreHorizontal, User as UserIcon } from "lucide-react";
 import { TaskDetailSheet } from "@/components/dashboard/TaskDetailSheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 
 import { RoomMember } from "@/types/room";
 
@@ -27,6 +28,7 @@ const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
 ];
 
 export function KanbanBoard({ project, members, currentUser, onUpdateStatus, onAssignTask, onUpdateTask }: KanbanBoardProps) {
+    const { toast } = useToast();
     const [tasks, setTasks] = useState<Task[]>(project.tasks);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -42,6 +44,17 @@ export function KanbanBoard({ project, members, currentUser, onUpdateStatus, onA
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
         const newStatus = destination.droppableId as TaskStatus;
+
+        // Restriction: PM cannot move to review
+        if (newStatus === 'review' && currentUser?.role === 'pm') {
+            toast({
+                title: "Action Restricted",
+                description: "Only Team Members can signal that a task is ready for review.",
+                variant: "destructive"
+            });
+            // Card will snap back automatically if we don't update state
+            return;
+        }
 
         // Optimistic UI update
         const updatedTasks = tasks.map(t =>

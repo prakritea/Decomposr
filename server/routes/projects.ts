@@ -68,6 +68,10 @@ router.patch("/:roomId/projects/:projectId/tasks/:taskId", authenticateToken, as
     const { status, timeEstimate, timeSpent, startDate } = req.body;
 
     try {
+        if (status === 'review' && req.user?.role === 'pm') {
+            return res.status(403).json({ message: "Only Team Members can move tasks to review." });
+        }
+
         const updateData: any = {};
         if (status) updateData.status = status;
         if (timeEstimate !== undefined) updateData.timeEstimate = timeEstimate;
@@ -168,19 +172,19 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         {
             "summary": "A high-level executive summary (2-3 paragraphs) explaining the value proposition and core objectives.",
             "architecture": "A detailed technical breakdown of the stack, patterns (e.g., MVC, Microservices), and infrastructure.",
-            "timeline": "A realistic estimation (e.g., '12 weeks').",
+            "timeline": "A realistic estimation strictly in weeks (e.g., '14 weeks', '22 weeks').",
             "epics": [
                 {
-                    "name": "High-level Epic Title (e.g., 'User Identity & Security')",
+                    "name": "High-level Epic Title",
                     "description": "The strategic goal of this epic.",
                     "tasks": [
                         {
                             "title": "Specific, actionable task title",
-                            "description": "Technical implementation details, including specific libraries or patterns to use.",
+                            "description": "Technical implementation details.",
                             "priority": "low|medium|high|urgent",
                             "category": "Backend|Frontend|Database|DevOps|Integration|Security",
-                            "ownerRole": "e.g., 'Backend Lead', 'UI Designer', 'DevOps Specialist'",
-                            "effort": "e.g., '4-6 hours'",
+                            "ownerRole": "e.g., 'Backend Lead'",
+                            "timeEstimate": 4, 
                             "dependencies": "Title of the prerequisite task or 'None'"
                         }
                     ]
@@ -191,9 +195,10 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
         Rules:
         1. Generate exactly 4-6 strategic Epics.
         2. Within each Epic, provide at least 5-8 tasks.
-        3. Ensure tasks are logically grouped by their 'category'.
-        4. Descriptions must be technical and professional.
-        5. Output ONLY raw JSON.`;
+        3. Ensure tasks are logically grouped.
+        4. "timeEstimate" MUST be a number representing hours (e.g., 4, 8, 16).
+        5. The "timeline" must be calculated logically based on the total tasks and a standard team capacity (e.g., 100 tasks != 4 weeks).
+        6. Output ONLY raw JSON.`;
 
         const completion = await generateWithRetry(
             process.env.AI_MODEL_NAME || "gpt-4o",
@@ -274,7 +279,8 @@ router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, as
                             priority: priority as any,
                             category: task.category,
                             ownerRole: task.ownerRole,
-                            effort: task.effort,
+                            effort: task.effort || `${task.timeEstimate || 0} hours`,
+                            timeEstimate: task.timeEstimate || 0,
                             dependencies: task.dependencies,
                             dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 1 week
                             projectId: projectId,

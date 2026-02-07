@@ -174,15 +174,36 @@ export default function PMDashboard() {
 
                 {/* Recent Activity Aggregated from all rooms */}
                 <div className="mt-8">
-                    <ActivityTimeline tasks={userRooms.flatMap(room =>
-                        (room.projects || []).flatMap(project =>
-                            (project.tasks || []).map(task => ({
-                                ...task,
-                                roomName: room.name,
-                                projectName: project.name
-                            }))
+                    <ActivityTimeline activities={[
+                        ...userRooms.map(room => ({
+                            id: `room-${room.id}`,
+                            type: 'room_created' as const,
+                            title: room.name,
+                            timestamp: new Date(room.createdAt),
+                            roomName: room.name,
+                            assignedTo: { name: room.createdBy }
+                        })),
+                        ...userRooms.flatMap(room =>
+                            (room.projects || []).flatMap(project =>
+                                (project.tasks || [])
+                                    .filter(task => task.status === 'done' || task.status === 'review')
+                                    .map(task => {
+                                        let type: 'task_done' | 'task_review' = task.status === 'done' ? 'task_done' : 'task_review';
+
+                                        return {
+                                            id: `task-${task.id}-${task.updatedAt}`,
+                                            type,
+                                            title: task.title,
+                                            status: task.status,
+                                            timestamp: new Date(task.updatedAt),
+                                            roomName: room.name,
+                                            projectName: project.name,
+                                            assignedTo: task.assignedTo ? { name: task.assignedTo.name, avatar: task.assignedTo.avatar } : undefined
+                                        };
+                                    })
+                            )
                         )
-                    )} />
+                    ]} />
                 </div>
             </div>
         </div>

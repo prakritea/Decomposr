@@ -40,7 +40,7 @@ router.post("/create", authenticateToken, async (req: AuthRequest, res) => {
             },
             include: {
                 members: { include: { user: { select: { name: true, email: true, role: true } } } },
-                projects: { include: { tasks: { include: { assignedTo: { select: { id: true, name: true, role: true, avatar: true } } } } } },
+                projects: { include: { epics: { include: { tasks: true } }, tasks: { include: { assignedTo: { select: { id: true, name: true, role: true, avatar: true } } } } } },
             }
         });
         res.status(201).json(room);
@@ -112,9 +112,10 @@ router.get("/user-rooms", authenticateToken, async (req: AuthRequest, res) => {
             include: {
                 creator: { select: { name: true, email: true } },
                 members: { include: { user: { select: { name: true, email: true, role: true } } } },
-                projects: { include: { tasks: { include: { assignedTo: { select: { id: true, name: true, role: true, avatar: true } } } } } },
+                projects: { include: { epics: { include: { tasks: true } }, tasks: { include: { assignedTo: { select: { id: true, name: true, role: true, avatar: true } } } } } },
                 _count: { select: { members: true, projects: true } }
-            }
+            },
+            orderBy: { createdAt: 'desc' }
         });
         res.json(rooms);
     } catch (error) {
@@ -131,7 +132,12 @@ router.get("/:id", authenticateToken, async (req: AuthRequest, res) => {
             where: { id },
             include: {
                 members: { include: { user: { select: { id: true, name: true, role: true, email: true } } } },
-                projects: { include: { tasks: { include: { assignedTo: { select: { id: true, name: true, role: true, avatar: true } } } } } },
+                projects: {
+                    include: {
+                        epics: { include: { tasks: true } },
+                        tasks: { include: { assignedTo: { select: { id: true, name: true, role: true, avatar: true } } } }
+                    }
+                },
             }
         });
 
