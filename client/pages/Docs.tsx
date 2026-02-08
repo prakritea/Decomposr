@@ -36,7 +36,8 @@ export default function Docs() {
                                     <CardTitle className="text-white">Quick Start</CardTitle>
                                 </CardHeader>
                                 <CardContent className="text-white/70 space-y-2">
-                                    <p>Go to the <strong>Dashboard</strong>, select your tech stack, and hit "Generate". It's that simple.</p>
+                                    <p>As a <strong>Product Manager</strong>, create a new Project Room, then click <strong>"Decompose with AI"</strong> to generate your execution plan.</p>
+                                    <p>As a <strong>Team Member</strong>, join a room using an invite code to view the board and start working.</p>
                                 </CardContent>
                             </Card>
                         </div>
@@ -48,13 +49,12 @@ export default function Docs() {
                         <h2 className="text-3xl font-bold text-white mb-4">How to Use Decomposr</h2>
                         <div className="space-y-6 text-white/80">
                             <section>
-                                <h3 className="text-2xl font-semibold text-primary mb-2">Creating a New Project</h3>
-                                <p>Navigate to the Dashboard. You will see a configuration panel on the left.</p>
+                                <h3 className="text-2xl font-semibold text-primary mb-2">Creating a New Project Room</h3>
+                                <p>Navigate to the Rooms page (or PM Dashboard). Create a room by describing your vision.</p>
                                 <ul className="list-disc pl-6 mt-2 space-y-1">
-                                    <li><strong>Project Description:</strong> Be as detailed as possible.</li>
-                                    <li><strong>Target Platform:</strong> Web, Mobile, etc.</li>
-                                    <li><strong>Tech Stack:</strong> Choose your preferred technologies.</li>
-                                    <li><strong>Team Size & Timeline:</strong> Helps estimation algorithms.</li>
+                                    <li><strong>Room Name:</strong> The overall title of your project space.</li>
+                                    <li><strong>Description:</strong> Context for the AI to understand your goals.</li>
+                                    <li><strong>Members:</strong> Share the invite code to bring your team in.</li>
                                 </ul>
                             </section>
                             <section>

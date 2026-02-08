@@ -17,6 +17,7 @@ interface RoomsContextType {
     assignTask: (roomId: string, projectId: string, taskId: string, userId: string) => Promise<Task>;
     updateTaskStatus: (roomId: string, projectId: string, taskId: string, status: TaskStatus) => Promise<Task>;
     updateTask: (roomId: string, projectId: string, taskId: string, data: Partial<Task>) => Promise<Task>;
+    acceptTask: (roomId: string, projectId: string, taskId: string) => Promise<Task>;
     getEmployeeTasks: () => Task[];
     deleteRoom: (id: string) => Promise<void>;
 }
@@ -46,7 +47,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     const userRooms = rooms; // Backend already returns user's rooms
 
-    const createRoom = async (name: string, description: string): Promise<ProjectRoom> => {
+    const createRoom = useCallback(async (name: string, description: string): Promise<ProjectRoom> => {
         try {
             const room = await api.rooms.create({ name, description });
             await refreshRooms();
@@ -63,9 +64,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             });
             throw error;
         }
-    };
+    }, [refreshRooms, toast]);
 
-    const joinRoom = async (inviteCode: string): Promise<ProjectRoom> => {
+    const joinRoom = useCallback(async (inviteCode: string): Promise<ProjectRoom> => {
         try {
             const room = await api.rooms.join({ inviteCode });
             await refreshRooms();
@@ -82,17 +83,17 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             });
             throw error;
         }
-    };
+    }, [refreshRooms, toast]);
 
-    const getRoom = async (roomId: string): Promise<ProjectRoom | null> => {
+    const getRoom = useCallback(async (roomId: string): Promise<ProjectRoom | null> => {
         try {
             return await api.rooms.getDetails(roomId);
         } catch (error) {
             return null;
         }
-    };
+    }, []);
 
-    const createProject = async (roomId: string, name: string, description: string): Promise<Project> => {
+    const createProject = useCallback(async (roomId: string, name: string, description: string): Promise<Project> => {
         try {
             const project = await api.projects.create(roomId, { name, description });
             await refreshRooms();
@@ -102,9 +103,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             toast({ title: "Error", description: "Could not create project", variant: "destructive" });
             throw error;
         }
-    };
+    }, [refreshRooms, toast]);
 
-    const generateAIPlan = async (roomId: string, projectId: string): Promise<Project[]> => {
+    const generateAIPlan = useCallback(async (roomId: string, projectId: string): Promise<Project[]> => {
         try {
             const tasks = await api.projects.generateTasks(roomId, projectId);
             await refreshRooms();
@@ -118,9 +119,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             });
             throw error;
         }
-    };
+    }, [refreshRooms, toast]);
 
-    const assignTask = async (roomId: string, projectId: string, taskId: string, userId: string): Promise<Task> => {
+    const assignTask = useCallback(async (roomId: string, projectId: string, taskId: string, userId: string): Promise<Task> => {
         try {
             const task = await api.projects.assignTask(roomId, projectId, taskId, { userId });
             await refreshRooms();
@@ -130,9 +131,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             toast({ title: "Error", description: "Could not assign task", variant: "destructive" });
             throw error;
         }
-    };
+    }, [refreshRooms, toast]);
 
-    const updateTaskStatus = async (roomId: string, projectId: string, taskId: string, status: TaskStatus): Promise<Task> => {
+    const updateTaskStatus = useCallback(async (roomId: string, projectId: string, taskId: string, status: TaskStatus): Promise<Task> => {
         try {
             const task = await api.projects.updateTask(roomId, projectId, taskId, { status });
             await refreshRooms();
@@ -141,9 +142,9 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             toast({ title: "Error", description: "Could not update task status", variant: "destructive" });
             throw error;
         }
-    };
+    }, [refreshRooms, toast]);
 
-    const updateTask = async (roomId: string, projectId: string, taskId: string, data: Partial<Task>): Promise<Task> => {
+    const updateTask = useCallback(async (roomId: string, projectId: string, taskId: string, data: Partial<Task>): Promise<Task> => {
         try {
             const task = await api.projects.updateTask(roomId, projectId, taskId, data);
             await refreshRooms();
@@ -152,18 +153,35 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
             toast({ title: "Error", description: "Could not update task", variant: "destructive" });
             throw error;
         }
-    };
+    }, [refreshRooms, toast]);
+
+    const acceptTask = useCallback(async (roomId: string, projectId: string, taskId: string): Promise<Task> => {
+        try {
+            const task = await api.projects.acceptTask(roomId, projectId, taskId);
+            await refreshRooms();
+            toast({ title: "Task Accepted!", description: "Moved to In Progress." });
+            return task;
+        } catch (error) {
+            toast({ title: "Error", description: "Could not accept task", variant: "destructive" });
+            throw error;
+        }
+    }, [refreshRooms, toast]);
 
     const getEmployeeTasks = (): Task[] => {
         if (!user) return [];
         return rooms.flatMap(room =>
             room.projects?.flatMap(project =>
-                project.tasks?.filter(task => task.assignedToId === user.id) || []
+                project.tasks?.filter(task => task.assignedToId === user.id).map(task => ({
+                    ...task,
+                    roomId: room.id,
+                    roomName: room.name,
+                    projectName: project.name
+                })) || []
             ) || []
         );
     };
 
-    const deleteRoom = async (id: string): Promise<void> => {
+    const deleteRoom = useCallback(async (id: string): Promise<void> => {
         try {
             await api.rooms.delete(id);
             await refreshRooms();
@@ -171,7 +189,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             toast({ title: "Error", description: "Could not delete project", variant: "destructive" });
         }
-    };
+    }, [refreshRooms, toast]);
 
     return (
         <RoomsContext.Provider
@@ -188,6 +206,7 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
                 updateTaskStatus,
                 updateTask,
                 getEmployeeTasks,
+                acceptTask,
                 deleteRoom,
             }}
         >

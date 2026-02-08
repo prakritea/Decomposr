@@ -18,7 +18,7 @@ import { Link } from "react-router-dom";
 
 export default function EmployeeDashboard() {
     const { user } = useAuth();
-    const { userRooms, getEmployeeTasks } = useRooms();
+    const { userRooms, getEmployeeTasks, acceptTask } = useRooms();
 
     const assignedTasks = getEmployeeTasks();
     const joinedRoomsCount = userRooms.length;
@@ -72,6 +72,44 @@ export default function EmployeeDashboard() {
                         </Card>
                     ))}
                 </div>
+
+                {/* Pending Tasks (Task Acceptance) */}
+                <Card className="bg-black/80 border-white/10 backdrop-blur-xl mb-8">
+                    <CardHeader>
+                        <CardTitle className="text-white flex items-center gap-2 text-xl">
+                            <AlertCircle className="w-5 h-5 text-primary" />
+                            Tasks Needing Acceptance
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {assignedTasks.filter(t => !t.isAccepted).length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {assignedTasks.filter(t => !t.isAccepted).map((task) => (
+                                    <div key={task.id} className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 flex flex-col justify-between group hover:border-primary/40 transition-all">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Badge className="bg-primary/20 text-primary border-none text-[10px] uppercase font-bold tracking-wider">{task.roomName}</Badge>
+                                                <Badge variant="outline" className="text-[10px] border-white/10 text-white/40">{task.projectName}</Badge>
+                                            </div>
+                                            <h4 className="text-white font-bold mb-1 group-hover:text-primary transition-colors">{task.title}</h4>
+                                            <p className="text-white/60 text-xs line-clamp-2 mb-6">{task.description}</p>
+                                        </div>
+                                        <Button
+                                            onClick={() => acceptTask(task.roomId!, task.projectId, task.id)}
+                                            className="w-full bg-primary hover:bg-primary/80 text-black font-bold h-10 rounded-xl"
+                                        >
+                                            Accept Task
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-white/40 border border-dashed border-white/10 rounded-2xl">
+                                <p className="text-sm italic">All assigned tasks have been accepted. Check your rooms for progress!</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Primary Actions */}
                 <div className="grid md:grid-cols-2 gap-6 mb-8">

@@ -20,6 +20,7 @@ export interface Task {
     };
     dueDate: Date | string;
     status: TaskStatus;
+    isAccepted: boolean;
     priority: TaskPriority;
     category?: string;
     ownerRole?: string;
@@ -30,6 +31,7 @@ export interface Task {
     timeEstimate?: number;
     timeSpent?: number;
     startDate?: Date | string | null;
+    project?: Project;
 }
 
 export interface Epic {

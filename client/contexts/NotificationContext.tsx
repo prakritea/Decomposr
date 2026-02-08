@@ -36,7 +36,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             fetchNotifications();
 
             // Connect socket
-            const newSocket = io("http://localhost:8080", {
+            const newSocket = io(window.location.origin, {
                 query: { userId: user?.id }
             });
 

@@ -104,9 +104,16 @@ export function KanbanBoard({ project, members, currentUser, onUpdateStatus, onA
                                                 >
                                                     <CardContent className="p-3 space-y-3">
                                                         <div className="flex justify-between items-start">
-                                                            <Badge variant="outline" className="text-[10px] border-white/10 text-white/40">
-                                                                {task.priority}
-                                                            </Badge>
+                                                            <div className="flex gap-2">
+                                                                <Badge variant="outline" className="text-[10px] border-white/10 text-white/40">
+                                                                    {task.priority}
+                                                                </Badge>
+                                                                {task.assignedToId && !task.isAccepted && (
+                                                                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-500 bg-amber-500/5 animate-pulse">
+                                                                        Waiting...
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                             <Button variant="ghost" size="icon" className="h-6 w-6 text-white/20 opacity-0 group-hover:opacity-100">
                                                                 <MoreHorizontal className="w-4 h-4" />
                                                             </Button>

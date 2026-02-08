@@ -43,17 +43,17 @@ export default function ProjectRoom() {
     const [activeProject, setActiveProject] = useState<Project | null>(null);
     const [projectModalOpen, setProjectModalOpen] = useState(false);
 
-    const fetchRoom = useCallback(async () => {
+    const fetchRoom = useCallback(async (isInitial = false) => {
         if (!roomId) return;
-        setIsLoading(true);
+        if (isInitial) setIsLoading(true);
         const data = await getRoom(roomId);
         setRoom(data);
-        setIsLoading(false);
+        if (isInitial) setIsLoading(false);
     }, [roomId, getRoom]);
 
     useEffect(() => {
-        fetchRoom();
-    }, [fetchRoom]);
+        fetchRoom(true);
+    }, [roomId]); // Only on roomId change
 
     const isPM = user?.role === "pm";
 
@@ -113,16 +113,18 @@ export default function ProjectRoom() {
 
     // Sync active project with room data updates
     useEffect(() => {
-        if (room) {
-            if (activeProject) {
-                const current = room.projects.find(p => p.id === activeProject.id);
-                if (current) setActiveProject(current);
-            } else if (room.projects.length > 0) {
-                // Auto-select first project
+        if (room && room.projects.length > 0) {
+            if (!activeProject) {
                 setActiveProject(room.projects[0]);
+            } else {
+                const current = room.projects.find(p => p.id === activeProject.id);
+                // Only update if the project data has actually changed (e.g., task count/status)
+                if (current && JSON.stringify(current) !== JSON.stringify(activeProject)) {
+                    setActiveProject(current);
+                }
             }
         }
-    }, [room, activeProject]);
+    }, [room, activeProject?.id]); // Depend on ID instead of object to avoid loops
 
     if (isLoading) {
         return (
@@ -170,6 +172,16 @@ export default function ProjectRoom() {
                             <p className="text-white/70 text-lg max-w-3xl leading-relaxed">{room.description}</p>
                         </div>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            {isPM && (
+                                <Button
+                                    onClick={() => setProjectModalOpen(true)}
+                                    variant="outline"
+                                    className="border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Add Project
+                                </Button>
+                            )}
                             <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-xl p-3 backdrop-blur-sm">
                                 <div className="flex items-center gap-3">
                                     <div className="flex flex-col">
@@ -293,35 +305,11 @@ export default function ProjectRoom() {
                                         Transform your project idea into a complete execution plan with Executive Summary, Architecture & Stack, Timeline, Epics, and Kanban board—all powered by AI.
                                     </p>
                                     <Button
-                                        onClick={async () => {
-                                            try {
-                                                setIsLoading(true);
-                                                // Create project using room data
-                                                const project = await createProject(room.id, room.name, room.description);
-                                                // Generate AI plan
-                                                await generateAIPlan(room.id, project.id);
-                                                // Refresh to show the new project
-                                                await fetchRoom();
-                                            } catch (error) {
-                                                console.error('Failed to generate project:', error);
-                                            } finally {
-                                                setIsLoading(false);
-                                            }
-                                        }}
-                                        disabled={isLoading}
+                                        onClick={() => setProjectModalOpen(true)}
                                         className="bg-primary hover:bg-primary/90 text-black font-bold h-12 px-8 rounded-xl"
                                     >
-                                        {isLoading ? (
-                                            <>
-                                                <div className="w-5 h-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                                                Generating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Sparkles className="w-5 h-5 mr-2" />
-                                                Generate with AI
-                                            </>
-                                        )}
+                                        <Plus className="w-5 h-5 mr-2" />
+                                        Initialize First Project
                                     </Button>
                                 </Card>
                             </div>

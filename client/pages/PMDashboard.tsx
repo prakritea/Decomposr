@@ -181,7 +181,7 @@ export default function PMDashboard() {
                             title: room.name,
                             timestamp: new Date(room.createdAt),
                             roomName: room.name,
-                            assignedTo: { name: room.createdBy }
+                            assignedTo: room.creator ? { name: room.creator.name } : undefined
                         })),
                         ...userRooms.flatMap(room =>
                             (room.projects || []).flatMap(project =>

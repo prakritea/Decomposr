@@ -39,7 +39,7 @@ async function generateWithRetry(model: string, messages: any[], maxRetries = 3)
 }
 
 // Create Project (PM Only)
-router.post("/:roomId/projects", authenticateToken, async (req: AuthRequest, res) => {
+router.post("/:roomId", authenticateToken, async (req: AuthRequest, res) => {
     const roomId = req.params.roomId as string;
     const { name, description } = req.body;
     const userRole = req.user?.role;
@@ -63,7 +63,7 @@ router.post("/:roomId/projects", authenticateToken, async (req: AuthRequest, res
 });
 
 // Update Task Status
-router.patch("/:roomId/projects/:projectId/tasks/:taskId", authenticateToken, async (req: AuthRequest, res) => {
+router.patch("/:roomId/:projectId/tasks/:taskId", authenticateToken, async (req: AuthRequest, res) => {
     const taskId = req.params.taskId as string;
     const { status, timeEstimate, timeSpent, startDate } = req.body;
 
@@ -113,7 +113,7 @@ router.patch("/:roomId/projects/:projectId/tasks/:taskId", authenticateToken, as
 });
 
 // Assign Task (PM Only)
-router.patch("/:roomId/projects/:projectId/tasks/:taskId/assign", authenticateToken, async (req: AuthRequest, res) => {
+router.patch("/:roomId/:projectId/tasks/:taskId/assign", authenticateToken, async (req: AuthRequest, res) => {
     const taskId = req.params.taskId as string;
     const { userId } = req.body;
     const userRole = req.user?.role;
@@ -125,7 +125,10 @@ router.patch("/:roomId/projects/:projectId/tasks/:taskId/assign", authenticateTo
     try {
         const task = await prisma.task.update({
             where: { id: taskId },
-            data: { assignedToId: userId },
+            data: {
+                assignedToId: userId,
+                isAccepted: false // Reset on update
+            },
             include: { project: { include: { room: true } }, assignedTo: { select: { id: true, name: true, role: true, avatar: true } } }
         });
 
@@ -144,8 +147,48 @@ router.patch("/:roomId/projects/:projectId/tasks/:taskId/assign", authenticateTo
     }
 });
 
+// Accept Task (Employee Only)
+router.patch("/:roomId/:projectId/tasks/:taskId/accept", authenticateToken, async (req: AuthRequest, res) => {
+    const taskId = req.params.taskId as string;
+    const userId = req.user?.id;
+
+    try {
+        const task = await prisma.task.findUnique({
+            where: { id: taskId },
+            include: { project: { include: { room: true } } }
+        });
+
+        if (!task) return res.status(404).json({ message: "Task not found" });
+        if (task.assignedToId !== userId) {
+            return res.status(403).json({ message: "You can only accept tasks assigned to you" });
+        }
+
+        const updatedTask = await prisma.task.update({
+            where: { id: taskId },
+            data: {
+                isAccepted: true,
+                status: 'inprogress'
+            },
+            include: { project: { include: { room: true } }, assignedTo: { select: { id: true, name: true, role: true, avatar: true } } }
+        });
+
+        // Notify PM
+        await createNotification({
+            userId: task.project.room.creatorId,
+            type: "task_updated",
+            title: "Task Accepted",
+            message: `${req.user?.name || "An employee"} accepted task: ${task.title}`,
+            link: `/rooms/${task.project.room.id}`
+        });
+
+        res.json(updatedTask);
+    } catch (error) {
+        res.status(500).json({ message: "Error accepting task" });
+    }
+});
+
 // AI Page: Generate Tasks
-router.post("/:roomId/projects/:projectId/generate-tasks", authenticateToken, async (req: AuthRequest, res) => {
+router.post("/:roomId/:projectId/generate-tasks", authenticateToken, async (req: AuthRequest, res) => {
     const projectId = req.params.projectId as string;
     const userRole = req.user?.role;
 

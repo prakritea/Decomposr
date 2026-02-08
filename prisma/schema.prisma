@@ -129,6 +129,7 @@ model Task {
   
   assignedToId String?
   assignedTo   User?        @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  isAccepted   Boolean      @default(false)
 
   timeEstimate Int          @default(0) // In hours
   timeSpent    Int          @default(0) // In hours

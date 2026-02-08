@@ -34,10 +34,11 @@ export const api = {
         delete: (id: string) => fetchWithAuth(`/rooms/${id}`, { method: "DELETE" }),
     },
     projects: {
-        create: (roomId: string, data: any) => fetchWithAuth(`/projects/${roomId}/projects`, { method: "POST", body: JSON.stringify(data) }),
-        generateTasks: (roomId: string, projectId: string) => fetchWithAuth(`/projects/${roomId}/projects/${projectId}/generate-tasks`, { method: "POST" }),
-        updateTask: (roomId: string, projectId: string, taskId: string, data: any) => fetchWithAuth(`/projects/${roomId}/projects/${projectId}/tasks/${taskId}`, { method: "PATCH", body: JSON.stringify(data) }),
-        assignTask: (roomId: string, projectId: string, taskId: string, data: any) => fetchWithAuth(`/projects/${roomId}/projects/${projectId}/tasks/${taskId}/assign`, { method: "PATCH", body: JSON.stringify(data) }),
+        create: (roomId: string, data: any) => fetchWithAuth(`/projects/${roomId}`, { method: "POST", body: JSON.stringify(data) }),
+        generateTasks: (roomId: string, projectId: string) => fetchWithAuth(`/projects/${roomId}/${projectId}/generate-tasks`, { method: "POST" }),
+        updateTask: (roomId: string, projectId: string, taskId: string, data: any) => fetchWithAuth(`/projects/${roomId}/${projectId}/tasks/${taskId}`, { method: "PATCH", body: JSON.stringify(data) }),
+        assignTask: (roomId: string, projectId: string, taskId: string, data: any) => fetchWithAuth(`/projects/${roomId}/${projectId}/tasks/${taskId}/assign`, { method: "PATCH", body: JSON.stringify(data) }),
+        acceptTask: (roomId: string, projectId: string, taskId: string) => fetchWithAuth(`/projects/${roomId}/${projectId}/tasks/${taskId}/accept`, { method: "PATCH" }),
     },
     notifications: {
         getAll: () => fetchWithAuth("/notifications"),

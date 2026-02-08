@@ -6,6 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret";
 export interface AuthRequest extends Request {
     user?: {
         id: string;
+        name: string;
         role: string;
     };
 }
@@ -19,7 +20,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string };
+        const decoded = jwt.verify(token, JWT_SECRET) as { id: string; name: string; role: string };
         req.user = decoded;
         next();
     } catch (error) {

@@ -96,7 +96,14 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                                                 {activity.title}
                                             </h4>
                                             <span className="text-[10px] text-white/40 font-mono tracking-tighter whitespace-nowrap bg-white/5 py-1 px-2 rounded">
-                                                {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                                                {(() => {
+                                                    try {
+                                                        const date = new Date(activity.timestamp);
+                                                        return isNaN(date.getTime()) ? 'just now' : formatDistanceToNow(date, { addSuffix: true });
+                                                    } catch (e) {
+                                                        return 'recently';
+                                                    }
+                                                })()}
                                             </span>
                                         </div>
                                     </div>
@@ -120,7 +127,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                                             <Avatar className="w-6 h-6 border border-white/10">
                                                 <AvatarImage src={activity.assignedTo.avatar || undefined} />
                                                 <AvatarFallback className="bg-primary/20 text-primary text-[10px] font-bold">
-                                                    {activity.assignedTo.name.charAt(0)}
+                                                    {activity.assignedTo.name?.charAt(0) || '?'}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <span className="text-xs text-white/40">

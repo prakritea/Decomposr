@@ -7,7 +7,8 @@ export interface ProjectRoom {
     description: string;
     inviteCode: string;
     creatorId: string;
-    createdBy: string;
+    createdBy?: string;
+    creator?: { name: string; email: string };
     createdAt: Date;
     members: RoomMember[];
     projects: Project[];
