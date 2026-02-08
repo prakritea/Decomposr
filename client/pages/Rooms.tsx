@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRooms } from "@/contexts/RoomsContext";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,20 @@ import { RoomCard } from "@/components/rooms/RoomCard";
 
 export default function Rooms() {
     const { user } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
     const { userRooms, createRoom, joinRoom } = useRooms();
     const [createModalOpen, setCreateModalOpen] = useState(false);
-    const [joinModalOpen, setJoinModalOpen] = useState(false);
+    const [joinModalOpen, setJoinModalOpen] = useState(
+        location.state?.openJoinModal || false
+    );
+
+    useEffect(() => {
+        if (location.state?.openJoinModal) {
+            // Clear the state so it doesn't re-open on refresh or back navigation
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location.state, navigate, location.pathname]);
 
     const isPM = user?.role === "pm";
 

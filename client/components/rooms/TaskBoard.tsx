@@ -112,6 +112,7 @@ export function TaskBoard({
                                         )}
                                     </div>
 
+                                    {/* Status updates for Employees */}
                                     {!isPM && task.status !== "done" && (
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -122,10 +123,22 @@ export function TaskBoard({
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent className="bg-[#0a0a0a] border-white/10 text-white">
                                                 <DropdownMenuItem onClick={() => onUpdateStatus(task.projectId, task.id, "inprogress")} className="hover:bg-white/10 cursor-pointer">In Progress</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => onUpdateStatus(task.projectId, task.id, "review")} className="hover:bg-white/10 cursor-pointer">In Review</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => onUpdateStatus(task.projectId, task.id, "done")} className="hover:bg-white/10 cursor-pointer text-green-400">Mark Completed</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => onUpdateStatus(task.projectId, task.id, "review")} className="hover:bg-white/10 cursor-pointer">Ready for Review</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
+                                    )}
+
+                                    {/* Completion approval for PMs */}
+                                    {isPM && task.status === "review" && (
+                                        <Button
+                                            onClick={() => onUpdateStatus(task.projectId, task.id, "done")}
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 border-green-500/50 text-green-400 hover:bg-green-500/10 hover:text-green-300"
+                                        >
+                                            <CheckCircle2 className="w-4 h-4 mr-1" />
+                                            Approve & Complete
+                                        </Button>
                                     )}
                                 </div>
                             </div>

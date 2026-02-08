@@ -1,13 +1,14 @@
-import { PrismaClient } from "@prisma/client";
+import * as Prisma from "@prisma/client";
+const { PrismaClient } = Prisma;
 import { PrismaPg } from "@prisma/adapter-pg";
 import * as pg from "pg";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = global as unknown as { prisma: Prisma.PrismaClient };
 
-let prismaInstance: PrismaClient;
+let prismaInstance: Prisma.PrismaClient;
 
 if (globalForPrisma.prisma) {
     prismaInstance = globalForPrisma.prisma;

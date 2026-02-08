@@ -129,7 +129,7 @@ export default function EmployeeDashboard() {
                                 asChild
                                 className="w-full bg-primary hover:bg-primary/90 text-black font-bold"
                             >
-                                <Link to="/rooms">
+                                <Link to="/rooms" state={{ openJoinModal: true }}>
                                     Enter Code
                                     <ArrowRight className="w-4 h-4 ml-2" />
                                 </Link>

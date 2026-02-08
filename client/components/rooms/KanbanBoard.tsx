@@ -52,7 +52,16 @@ export function KanbanBoard({ project, members, currentUser, onUpdateStatus, onA
                 description: "Only Team Members can signal that a task is ready for review.",
                 variant: "destructive"
             });
-            // Card will snap back automatically if we don't update state
+            return;
+        }
+
+        // Restriction: Only PM can move to done
+        if (newStatus === 'done' && currentUser?.role !== 'pm') {
+            toast({
+                title: "Action Restricted",
+                description: "Only Product Managers can mark tasks as completed.",
+                variant: "destructive"
+            });
             return;
         }
 

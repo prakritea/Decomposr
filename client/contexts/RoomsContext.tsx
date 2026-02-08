@@ -157,11 +157,36 @@ export function RoomsProvider({ children }: { children: ReactNode }) {
 
     const acceptTask = useCallback(async (roomId: string, projectId: string, taskId: string): Promise<Task> => {
         try {
+            // Optimistically update state
+            setRooms(prev => prev.map(room => {
+                if (room.id !== roomId) return room;
+                return {
+                    ...room,
+                    projects: room.projects.map(project => {
+                        if (project.id !== projectId) return project;
+                        return {
+                            ...project,
+                            tasks: project.tasks.map(task => {
+                                if (task.id !== taskId) return task;
+                                return { ...task, isAccepted: true, status: 'inprogress' as TaskStatus };
+                            })
+                        };
+                    })
+                };
+            }));
+
             const task = await api.projects.acceptTask(roomId, projectId, taskId);
-            await refreshRooms();
+
+            // Show toast immediately after API success
             toast({ title: "Task Accepted!", description: "Moved to In Progress." });
+
+            // Background refresh to sync any other changes
+            refreshRooms();
+
             return task;
         } catch (error) {
+            // Revert changes on error (by refreshing)
+            refreshRooms();
             toast({ title: "Error", description: "Could not accept task", variant: "destructive" });
             throw error;
         }

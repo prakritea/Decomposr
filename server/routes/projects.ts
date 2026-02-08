@@ -72,6 +72,10 @@ router.patch("/:roomId/:projectId/tasks/:taskId", authenticateToken, async (req:
             return res.status(403).json({ message: "Only Team Members can move tasks to review." });
         }
 
+        if (status === 'done' && req.user?.role !== 'pm') {
+            return res.status(403).json({ message: "Only Product Managers can mark tasks as completed." });
+        }
+
         const updateData: any = {};
         if (status) updateData.status = status;
         if (timeEstimate !== undefined) updateData.timeEstimate = timeEstimate;
@@ -84,9 +88,9 @@ router.patch("/:roomId/:projectId/tasks/:taskId", authenticateToken, async (req:
             include: { project: { include: { room: true } }, assignedTo: { select: { id: true, name: true, role: true, avatar: true } } }
         });
 
-        // If task is DONE, notify PM
+        // If task is DONE, notify PM (fire-and-forget)
         if (status === 'done') {
-            await createNotification({
+            createNotification({
                 userId: task.project.room.creatorId,
                 type: "task_updated",
                 title: "Task Completed",
@@ -95,9 +99,9 @@ router.patch("/:roomId/:projectId/tasks/:taskId", authenticateToken, async (req:
             });
         }
 
-        // If task is moved to REVIEW, notify PM
+        // If task is moved to REVIEW, notify PM (fire-and-forget)
         if (status === 'review') {
-            await createNotification({
+            createNotification({
                 userId: task.project.room.creatorId,
                 type: "task_updated", // You might want a specific type like 'task_review' if supported on frontend
                 title: "Task Ready for Review",
@@ -172,8 +176,8 @@ router.patch("/:roomId/:projectId/tasks/:taskId/accept", authenticateToken, asyn
             include: { project: { include: { room: true } }, assignedTo: { select: { id: true, name: true, role: true, avatar: true } } }
         });
 
-        // Notify PM
-        await createNotification({
+        // Notify PM (fire-and-forget)
+        createNotification({
             userId: task.project.room.creatorId,
             type: "task_updated",
             title: "Task Accepted",
@@ -204,29 +208,35 @@ router.post("/:roomId/:projectId/generate-tasks", authenticateToken, async (req:
         await prisma.task.deleteMany({ where: { projectId } });
         await prisma.epic.deleteMany({ where: { projectId } });
 
-        // AI Prompt
-        const prompt = `You are a world-class Technical Product Manager and Lead Software Architect.
-        Decompose the following project into a high-fidelity implementation plan.
+        // Senior Staff Architect AI Prompt - Professional Dynamic Scaling
+        const prompt = `You are a Senior Staff Software Architect and Technical Product Manager.
+        Decompose the following project into a professional-grade implementation plan.
         
         Project: "${project.name}"
         Goal: ${project.description}
 
+        Phase 1: Scale Assessment
+        Categorize the project into one of the following and scale your response accordingly:
+        - SMALL (e.g., Todo App, Landing Page): 4-6 Epics, 30-50 tasks.
+        - MEDIUM (e.g., Blog Platform, Dashboard): 8-12 Epics, 80-120 tasks.
+        - LARGE/ENTERPRISE (e.g., Zepto Clone, Uber Clone, CRM): 15-25 Epics, 150-300+ tasks.
+
         Your output must be a strictly valid JSON object following this schema:
         {
-            "summary": "A high-level executive summary (2-3 paragraphs) explaining the value proposition and core objectives.",
-            "architecture": "A detailed technical breakdown of the stack, patterns (e.g., MVC, Microservices), and infrastructure.",
-            "timeline": "A realistic estimation strictly in weeks (e.g., '14 weeks', '22 weeks').",
+            "summary": "Executive summary (3-4 paragraphs). Detail the value proposition, competitive landscape, and core technical hurdles.",
+            "architecture": "Deep technical analysis. Specify architectural patterns (Microservices, Hexagonal, Event-driven), technology stack recommendations, data consistency strategies, and infrastructure (K8s, Serverless, etc.).",
+            "timeline": "Realistic estimation in weeks (e.g., '12 weeks', '36 weeks'). Calculate based on task volume and complexity.",
             "epics": [
                 {
-                    "name": "High-level Epic Title",
-                    "description": "The strategic goal of this epic.",
+                    "name": "Phase-specific Epic Title (e.g., 'Phase 1: Foundation & Auth', 'Phase 3: Logistics Engine')",
+                    "description": "The strategic objective for this phase/module.",
                     "tasks": [
                         {
-                            "title": "Specific, actionable task title",
-                            "description": "Technical implementation details.",
+                            "title": "Actionable engineering task title (e.g., 'Implement Distributed Locking for Cart Service')",
+                            "description": "Detailed technical spec. Mention specific tools, algorithms, or patterns.",
                             "priority": "low|medium|high|urgent",
-                            "category": "Backend|Frontend|Database|DevOps|Integration|Security",
-                            "ownerRole": "e.g., 'Backend Lead'",
+                            "category": "Backend|Frontend|Database|DevOps|Integration|Security|Testing|UI/UX",
+                            "ownerRole": "e.g., 'Senior Distributed Systems Engineer', 'Staff UI Architect'",
                             "timeEstimate": 4, 
                             "dependencies": "Title of the prerequisite task or 'None'"
                         }
@@ -235,13 +245,12 @@ router.post("/:roomId/:projectId/generate-tasks", authenticateToken, async (req:
             ]
         }
         
-        Rules:
-        1. Generate exactly 4-6 strategic Epics.
-        2. Within each Epic, provide at least 5-8 tasks.
-        3. Ensure tasks are logically grouped.
-        4. "timeEstimate" MUST be a number representing hours (e.g., 4, 8, 16).
-        5. The "timeline" must be calculated logically based on the total tasks and a standard team capacity (e.g., 100 tasks != 4 weeks).
-        6. Output ONLY raw JSON.`;
+        Strict Professional Rules:
+        1. LOGICAL DENSITY: Do not skimp on tasks for complex projects. A Zepto clone requires exhaustive granularity (e.g., dark store logic, last-mile routing, real-time inventory sync).
+        2. PHASED APPROACH: Organize Epics chronologically: Foundation & Infra -> Schema & Core API -> Module 1 -> Module 2 -> ... -> Security Hardening -> QA & Load Testing.
+        3. DOMAIN COVERAGE: Ensure every plan includes Epics for: CI/CD Pipeline, Database Architecture, Performance Monitoring, and Security/Compliance.
+        4. NO FLUFF: Every task description must provide actual technical value to a developer.
+        5. VALIDATION: Output ONLY raw JSON.`;
 
         const completion = await generateWithRetry(
             process.env.AI_MODEL_NAME || "gpt-4o",
