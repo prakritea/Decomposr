@@ -217,9 +217,10 @@ router.post("/:roomId/:projectId/generate-tasks", authenticateToken, async (req:
 
         Phase 1: Scale Assessment
         Categorize the project into one of the following and scale your response accordingly:
-        - SMALL (e.g., Todo App, Landing Page): 4-6 Epics, 30-50 tasks.
-        - MEDIUM (e.g., Blog Platform, Dashboard): 8-12 Epics, 80-120 tasks.
-        - LARGE/ENTERPRISE (e.g., Zepto Clone, Uber Clone, CRM): 15-25 Epics, 150-300+ tasks.
+        - TINY (e.g., Hello World, simple automation script, internal utility): 1-2 Epics, 5-10 tasks.
+        - SMALL (e.g., Todo App, Landing Page, Personal Blog): 3-5 Epics, 15-35 tasks.
+        - MEDIUM (e.g., Multi-user Dashboard, E-commerce backend): 8-12 Epics, 80-120 tasks.
+        - LARGE/ENTERPRISE (e.g., Hyper-local delivery, Global CRM, FinTech Core): 15-25 Epics, 150-300+ tasks.
 
         Your output must be a strictly valid JSON object following this schema:
         {
@@ -247,10 +248,11 @@ router.post("/:roomId/:projectId/generate-tasks", authenticateToken, async (req:
         
         Strict Professional Rules:
         1. LOGICAL DENSITY: Do not skimp on tasks for complex projects. A Zepto clone requires exhaustive granularity (e.g., dark store logic, last-mile routing, real-time inventory sync).
-        2. PHASED APPROACH: Organize Epics chronologically: Foundation & Infra -> Schema & Core API -> Module 1 -> Module 2 -> ... -> Security Hardening -> QA & Load Testing.
-        3. DOMAIN COVERAGE: Ensure every plan includes Epics for: CI/CD Pipeline, Database Architecture, Performance Monitoring, and Security/Compliance.
-        4. NO FLUFF: Every task description must provide actual technical value to a developer.
-        5. VALIDATION: Output ONLY raw JSON.`;
+        2. COMPLEXITY ADAPTABILITY: Match the architectural complexity to the project description. Do NOT recommend Kubernetes, Microservices, or Enterprise-grade security (Vault, RBAC) for simple projects (TINY/SMALL) unless explicitly requested. For simple projects, prefer internal logic and standard deployment.
+        3. PHASED APPROACH: Organize Epics chronologically: Foundation & Infra -> Schema & Core API -> Module 1 -> Module 2 -> ... -> Security Hardening -> QA & Load Testing.
+        4. DOMAIN COVERAGE: Ensure larger plans include Epics for: CI/CD Pipeline, Database Architecture, Performance Monitoring, and Security/Compliance.
+        5. NO FLUFF: Every task description must provide actual technical value to a developer.
+        6. VALIDATION: Output ONLY raw JSON.`;
 
         const completion = await generateWithRetry(
             process.env.AI_MODEL_NAME || "gpt-4o",

@@ -534,7 +534,7 @@ export default function Landing() {
 
             {/* Hero Section */}
             <section className="relative px-4 py-20 md:py-32 overflow-hidden">
-                <div className="container max-w-full max-w-5xl mx-auto">
+                <div className="container max-w-5xl mx-auto">
                     <div className="text-center space-y-8">
                         {/* Badge */}
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 animate-fade-in hover:border-white/20 transition-colors cursor-pointer">
@@ -626,7 +626,7 @@ export default function Landing() {
 
             {/* Interactive Demo Section */}
             <section className="py-20 md:py-32 px-4 relative">
-                <div className="container max-w-full max-w-6xl mx-auto">
+                <div className="container max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-black text-white mb-4 animate-fade-in">
                             See It In Action
@@ -715,7 +715,7 @@ export default function Landing() {
 
             {/* Features Bento Grid Section */}
             <section id="features" className="py-20 md:py-32 px-4 relative">
-                <div className="container max-w-full max-w-7xl mx-auto">
+                <div className="container max-w-7xl mx-auto">
                     <div className="text-center mb-20">
                         <h2 className="text-4xl md:text-5xl font-black text-white mb-4 animate-fade-in">
                             Everything You Need
@@ -784,7 +784,7 @@ export default function Landing() {
 
             {/* Social Proof Section */}
             <section className="py-20 md:py-32 px-4 relative">
-                <div className="container max-w-full max-w-6xl mx-auto">
+                <div className="container max-w-6xl mx-auto">
                     {/* Trusted By Header */}
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-black text-white mb-4 animate-fade-in">
@@ -893,7 +893,7 @@ export default function Landing() {
 
             {/* Workflow Section */}
             <section className="py-20 md:py-32 px-4 relative">
-                <div className="container max-w-full max-w-5xl mx-auto">
+                <div className="container max-w-5xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-black text-white mb-4 animate-fade-in">
                             Simple Workflow
@@ -939,7 +939,7 @@ export default function Landing() {
 
             {/* CTA Section */}
             <section className="py-20 md:py-32 px-4 relative">
-                <div className="container max-w-full max-w-4xl mx-auto">
+                <div className="container max-w-4xl mx-auto">
                     <div className="relative rounded-2xl border border-primary/50 bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 backdrop-blur-sm p-8 md:p-16 overflow-hidden group hover:border-primary/80 transition-all">
                         <div className="absolute inset-0 bg-gradient-to-r from-primary via-transparent to-accent opacity-0 group-hover:opacity-5 transition-opacity duration-500" />
                         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/20 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity" />

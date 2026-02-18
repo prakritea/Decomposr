@@ -172,7 +172,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="container max-w-full max-w-7xl mx-auto px-4 md:px-6 pt-32 pb-8 relative z-10">
+      <div className="container max-w-7xl mx-auto px-4 md:px-6 pt-32 pb-8 relative z-10">
         {!projectPlan ? (
           // Input Area - Left Panel
           <div className="max-w-2xl mx-auto">
