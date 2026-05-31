@@ -1,30 +1,39 @@
 import { prisma } from "../lib/prisma";
 import { authenticateToken, AuthRequest } from "../middleware/auth";
-import OpenAI from "openai";
 import { Router } from "express";
 import { createNotification } from "../index";
 
 const router = Router();
-const openai = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: process.env.OPENROUTER_API_KEY || "",
-    defaultHeaders: {
-        "HTTP-Referer": "https://decomposr.ai",
-        "X-Title": "Decomposr",
-    },
-});
 
 async function generateWithRetry(model: string, messages: any[], maxRetries = 3) {
     let lastError: any;
     for (let i = 0; i < maxRetries; i++) {
         try {
-            const completion = await openai.chat.completions.create({
-                model,
-                messages,
-                temperature: 0.7,
-                max_tokens: 16384,
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    "HTTP-Referer": "https://decomposr.ai",
+                    "X-Title": "Decomposr",
+                },
+                body: JSON.stringify({
+                    model,
+                    messages,
+                    temperature: 0.7,
+                    max_tokens: 16384,
+                }),
             });
-            return completion;
+
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => ({}));
+                const error: any = new Error(errBody.error?.message || `OpenRouter returned status ${response.status}`);
+                error.status = response.status;
+                error.errorDetails = errBody.error;
+                throw error;
+            }
+
+            return await response.json();
         } catch (error: any) {
             lastError = error;
             if (error.status === 429) {
