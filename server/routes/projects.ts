@@ -22,6 +22,7 @@ async function generateWithRetry(model: string, messages: any[], maxRetries = 3)
                 model,
                 messages,
                 temperature: 0.7,
+                max_tokens: 16384,
             });
             return completion;
         } catch (error: any) {
@@ -271,23 +272,31 @@ router.post("/:roomId/:projectId/generate-tasks", authenticateToken, async (req:
         const text = completion.choices[0]?.message?.content || "{}";
         console.log("Raw AI Response:", text);
 
-        // Safe JSON parse with improved extraction
+        // Safe JSON parse with robust extraction (handles trailing text, code blocks)
         let aiOutput;
         try {
-            // Remove markdown code blocks if they exist
             let cleanText = text.trim();
             if (cleanText.includes("```")) {
                 const parts = cleanText.split("```");
-                // Find the part that looks like JSON or is between the first set of backticks
+                cleanText = "";
                 for (let part of parts) {
                     part = part.trim();
                     if (part.startsWith("json")) part = part.substring(4).trim();
-                    if (part.startsWith("{") && part.endsWith("}")) {
-                        cleanText = part;
+                    const start = part.indexOf("{");
+                    const end = part.lastIndexOf("}");
+                    if (start !== -1 && end !== -1 && end > start) {
+                        cleanText = part.substring(start, end + 1);
                         break;
                     }
                 }
+            } else {
+                const start = cleanText.indexOf("{");
+                const end = cleanText.lastIndexOf("}");
+                if (start !== -1 && end !== -1 && end > start) {
+                    cleanText = cleanText.substring(start, end + 1);
+                }
             }
+            if (!cleanText) throw new Error("No JSON object found in response");
             aiOutput = JSON.parse(cleanText);
             console.log("Parsed AI Output:", JSON.stringify(aiOutput, null, 2));
         } catch (e) {
