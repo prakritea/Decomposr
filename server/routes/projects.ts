@@ -9,13 +9,12 @@ async function generateWithRetry(model: string, messages: any[], maxRetries = 3)
     let lastError: any;
     for (let i = 0; i < maxRetries; i++) {
         try {
-            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            const baseUrl = process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1";
+            const response = await fetch(`${baseUrl}/chat/completions`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                    "HTTP-Referer": "https://decomposr.ai",
-                    "X-Title": "Decomposr",
+                    "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
                 },
                 body: JSON.stringify({
                     model,
