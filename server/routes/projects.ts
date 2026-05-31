@@ -278,7 +278,8 @@ router.post("/:roomId/:projectId/generate-tasks", authenticateToken, async (req:
             ]
         );
 
-        const text = completion.choices[0]?.message?.content || "{}";
+        const msg = completion.choices[0]?.message;
+        const text = msg?.content || msg?.reasoning || "{}";
         console.log("Raw AI Response:", text);
 
         // Safe JSON parse with robust extraction (handles trailing text, code blocks)
