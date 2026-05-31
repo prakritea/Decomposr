@@ -377,9 +377,12 @@ router.post("/:roomId/:projectId/generate-tasks", authenticateToken, async (req:
     } catch (error: any) {
         console.error("AI Generation Error:", error);
         if (error.status === 429) {
+            const retryAfter = error.errorDetails?.metadata?.headers?.["Retry-After"]
+                || error.errorDetails?.metadata?.retry_after_seconds
+                || null;
             return res.status(429).json({
-                message: "AI provider rate limit exceeded. Please wait a moment before trying again.",
-                retryAfter: error.errorDetails?.find((d: any) => d.retryDelay)?.retryDelay
+                message: error.errorDetails?.message || "AI provider rate limit exceeded. Please wait a moment before trying again.",
+                retryAfter
             });
         }
         res.status(error.status || 500).json({
