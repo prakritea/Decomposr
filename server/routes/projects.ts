@@ -20,9 +20,10 @@ async function generateWithRetry(model: string, messages: any[], maxRetries = 3)
                 body: JSON.stringify({
                     model,
                     messages,
-                    temperature: 0.7,
-                    max_tokens: 16384,
+                    temperature: 0.5,
+                    max_tokens: 4096,
                 }),
+                signal: AbortSignal.timeout(180000),
             });
 
             if (!response.ok) {
@@ -218,51 +219,41 @@ router.post("/:roomId/:projectId/generate-tasks", authenticateToken, async (req:
         await prisma.task.deleteMany({ where: { projectId } });
         await prisma.epic.deleteMany({ where: { projectId } });
 
-        // Senior Staff Architect AI Prompt - Professional Dynamic Scaling
-        const prompt = `You are a Senior Staff Software Architect and Technical Product Manager.
-        Decompose the following project into a professional-grade implementation plan.
-        
-        Project: "${project.name}"
-        Goal: ${project.description}
+        const prompt = `You are a Senior Software Architect. Decompose this project into a JSON plan.
 
-        Phase 1: Scale Assessment
-        Categorize the project into one of the following and scale your response accordingly:
-        - TINY (e.g., Hello World, simple automation script, internal utility): 1-2 Epics, 5-10 tasks.
-        - SMALL (e.g., Todo App, Landing Page, Personal Blog): 3-5 Epics, 15-35 tasks.
-        - MEDIUM (e.g., Multi-user Dashboard, E-commerce backend): 8-12 Epics, 80-120 tasks.
-        - LARGE/ENTERPRISE (e.g., Hyper-local delivery, Global CRM, FinTech Core): 15-25 Epics, 150-300+ tasks.
+Project: "${project.name}"
+Goal: ${project.description}
 
-        Your output must be a strictly valid JSON object following this schema:
+Scale your response based on project size:
+- SMALL → 1-3 Epics, 5-15 tasks
+- MEDIUM → 3-6 Epics, 15-60 tasks
+- LARGE → 6-12 Epics, 60-150 tasks
+
+Return ONLY valid JSON with this exact schema:
+{
+    "summary": "2-3 paragraph executive summary",
+    "architecture": "Brief architecture description with key technologies",
+    "timeline": "Estimated timeline in weeks",
+    "epics": [
         {
-            "summary": "Executive summary (3-4 paragraphs). Detail the value proposition, competitive landscape, and core technical hurdles.",
-            "architecture": "A visual tree-style architecture diagram using ASCII/Unicode characters, followed by a brief infrastructure summary. Example format:\nUsers (Mobile/Web)\n        │\n        ▼\n     API Gateway\n        │\n ┌──────┼───────────────┐\n ▼      ▼               ▼\nUser  Order Service  Product Service\nService  │              │\n         ▼              ▼\n   Inventory Service  Search Service\n         │              │\n         ▼              ▼\n      PostgreSQL     Elasticsearch",
-            "timeline": "Realistic estimation in weeks (e.g., '12 weeks', '36 weeks'). Calculate based on task volume and complexity.",
-            "epics": [
+            "name": "Epic name",
+            "description": "Epic objective",
+            "tasks": [
                 {
-                    "name": "Phase-specific Epic Title (e.g., 'Phase 1: Foundation & Auth', 'Phase 3: Logistics Engine')",
-                    "description": "The strategic objective for this phase/module.",
-                    "tasks": [
-                        {
-                            "title": "Actionable engineering task title (e.g., 'Implement Distributed Locking for Cart Service')",
-                            "description": "Detailed technical spec. Mention specific tools, algorithms, or patterns.",
-                            "priority": "low|medium|high|urgent",
-                            "category": "Backend|Frontend|Database|DevOps|Integration|Security|Testing|UI/UX",
-                            "ownerRole": "e.g., 'Senior Distributed Systems Engineer', 'Staff UI Architect'",
-                            "timeEstimate": 4, 
-                            "dependencies": "Title of the prerequisite task or 'None'"
-                        }
-                    ]
+                    "title": "Task title",
+                    "description": "Task description",
+                    "priority": "low|medium|high|urgent",
+                    "category": "Backend|Frontend|Database|DevOps|Testing|Security",
+                    "ownerRole": "Role title",
+                    "timeEstimate": 4,
+                    "dependencies": "None or task name"
                 }
             ]
         }
-        
-        Strict Professional Rules:
-        1. LOGICAL DENSITY: Do not skimp on tasks for complex projects. A Zepto clone requires exhaustive granularity (e.g., dark store logic, last-mile routing, real-time inventory sync).
-        2. COMPLEXITY ADAPTABILITY: Match the architectural complexity to the project description. Do NOT recommend Kubernetes, Microservices, or Enterprise-grade security (Vault, RBAC) for simple projects (TINY/SMALL) unless explicitly requested. For simple projects, prefer internal logic and standard deployment.
-        3. PHASED APPROACH: Organize Epics chronologically: Foundation & Infra -> Schema & Core API -> Module 1 -> Module 2 -> ... -> Security Hardening -> QA & Load Testing.
-        4. DOMAIN COVERAGE: Ensure larger plans include Epics for: CI/CD Pipeline, Database Architecture, Performance Monitoring, and Security/Compliance.
-        5. NO FLUFF: Every task description must provide actual technical value to a developer.
-        6. VALIDATION: Output ONLY raw JSON.`;
+    ]
+}
+
+Rules: Be concise, practical, and output ONLY raw JSON. No markdown, no explanations.`;
 
         const completion = await generateWithRetry(
             process.env.AI_MODEL_NAME || "gpt-4o",
