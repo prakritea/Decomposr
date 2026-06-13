@@ -39,6 +39,16 @@ export function createServer(httpServer?: any, existingApp?: express.Express) {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Latency logging
+  app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      const ms = Date.now() - start;
+      if (ms > 100) console.log(`[LATENCY] ${req.method} ${req.originalUrl} — ${ms}ms`);
+    });
+    next();
+  });
+
   // API routes
   app.use("/api/auth", authRoutes);
   app.use("/api/rooms", roomRoutes);

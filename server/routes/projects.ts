@@ -255,6 +255,7 @@ Return ONLY valid JSON with this exact schema:
 
 Rules: Be concise, practical, and output ONLY raw JSON. No markdown, no explanations.`;
 
+        const aiStart = Date.now();
         const completion = await generateWithRetry(
             process.env.AI_MODEL_NAME || "gpt-4o",
             [
@@ -268,10 +269,13 @@ Rules: Be concise, practical, and output ONLY raw JSON. No markdown, no explanat
                 }
             ]
         );
+        const aiEnd = Date.now();
 
         const msg = completion.choices[0]?.message;
         const text = msg?.content || msg?.reasoning || "{}";
-        console.log("Raw AI Response:", text);
+        const tokenUsage = completion.usage;
+        console.log(`[LATENCY] AI generation: ${(aiEnd - aiStart) / 1000}s`);
+        if (tokenUsage) console.log(`[LATENCY] Tokens: ${tokenUsage.prompt_tokens} in → ${tokenUsage.completion_tokens} out (${tokenUsage.total_tokens} total)`);
 
         // Safe JSON parse with robust extraction (handles trailing text, code blocks)
         let aiOutput;
@@ -317,6 +321,7 @@ Rules: Be concise, practical, and output ONLY raw JSON. No markdown, no explanat
         });
 
         // Create Epics and Tasks
+        const dbStart = Date.now();
         console.log(`Creating ${aiOutput.epics.length} epics...`);
         for (const epicData of aiOutput.epics) {
             console.log(`Creating epic: ${epicData.name}`);
@@ -356,6 +361,7 @@ Rules: Be concise, practical, and output ONLY raw JSON. No markdown, no explanat
                 console.warn(`No tasks found for epic: ${epicData.name}`);
             }
         }
+        console.log(`[LATENCY] DB writes: ${(Date.now() - dbStart) / 1000}s`);
         console.log("All epics and tasks created successfully.");
 
         // Return full project structure
