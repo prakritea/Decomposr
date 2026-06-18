@@ -68,10 +68,10 @@ model RoomMember {
   joinedAt  DateTime @default(now())
   
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   roomId    String
-  room      Room     @relation(fields: [roomId], references: [id])
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roomId])
 }
@@ -88,7 +88,7 @@ model Project {
   updatedAt         DateTime @updatedAt
   
   roomId            String
-  room              Room     @relation(fields: [roomId], references: [id])
+  room              Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
   
   tasks             Task[]
   epics             Epic[]
@@ -102,7 +102,7 @@ model Epic {
   updatedAt   DateTime @updatedAt
   
   projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   
   tasks       Task[]
 }
@@ -122,15 +122,16 @@ model Task {
   updatedAt    DateTime     @updatedAt
   
   projectId    String
-  project      Project      @relation(fields: [projectId], references: [id])
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   
   epicId       String?
-  epic         Epic?        @relation(fields: [epicId], references: [id])
+  epic         Epic?        @relation(fields: [epicId], references: [id], onDelete: SetNull)
   
   assignedToId String?
-  assignedTo   User?        @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  assignedTo   User?        @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: SetNull)
   isAccepted   Boolean      @default(false)
 
+  isAIGenerated Boolean    @default(true)
   timeEstimate Int          @default(0) // In hours
   timeSpent    Int          @default(0) // In hours
   startDate    DateTime?
@@ -146,5 +147,5 @@ model Notification {
   createdAt DateTime @default(now())
   
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

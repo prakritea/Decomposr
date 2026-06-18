@@ -5,96 +5,121 @@ import { useAuth } from "./AuthContext";
 import { io, Socket } from "socket.io-client";
 
 interface NotificationContextType {
-    notifications: Notification[];
-    unreadCount: number;
-    markAsRead: (id: string) => Promise<void>;
-    markAllAsRead: () => void;
-    clearAll: () => void;
+  notifications: Notification[];
+  unreadCount: number;
+  totalNotifications: number;
+  hasMoreNotifications: boolean;
+  loadMoreNotifications: () => Promise<void>;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => void;
+  clearAll: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const { user, isAuthenticated } = useAuth();
-    const [socket, setSocket] = useState<Socket | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalNotifications, setTotalNotifications] = useState(0);
+  const [hasMoreNotifications, setHasMoreNotifications] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const [socket, setSocket] = useState<Socket | null>(null);
 
-    const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
-    // Fetch notifications from backend
-    const fetchNotifications = async () => {
-        try {
-            const data = await api.notifications.getAll();
-            setNotifications(data);
-        } catch (error) {
-            console.error("Failed to fetch notifications:", error);
-        }
-    };
+  const fetchNotifications = async (pageNum = 1, append = false) => {
+    try {
+      const result = await api.notifications.getAll(pageNum, 20);
+      if (append) {
+        setNotifications(prev => [...prev, ...result.data]);
+      } else {
+        setNotifications(result.data);
+      }
+      setTotalNotifications(result.pagination.total);
+      setHasMoreNotifications(result.pagination.hasMore);
+      setPage(pageNum);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    }
+  };
 
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchNotifications();
+  const loadMoreNotifications = async () => {
+    if (hasMoreNotifications) {
+      await fetchNotifications(page + 1, true);
+    }
+  };
 
-            // Connect socket
-            const newSocket = io(window.location.origin, {
-                query: { userId: user?.id }
-            });
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchNotifications();
 
-            newSocket.on("notification", (notif: Notification) => {
-                setNotifications((prev) => [notif, ...prev]);
-            });
+      const getCookie = (name: string) => {
+        const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+        return match ? match[2] : null;
+      };
 
-            setSocket(newSocket);
+      const newSocket = io(window.location.origin, {
+        auth: { token: getCookie("token") },
+      });
 
-            return () => {
-                newSocket.disconnect();
-            };
-        }
-    }, [isAuthenticated, user?.id]);
+      newSocket.on("notification", (notif: Notification) => {
+        setNotifications((prev) => [notif, ...prev]);
+      });
 
-    const markAsRead = async (id: string) => {
-        try {
-            await api.notifications.markRead(id);
-            setNotifications((prev) =>
-                prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-            );
-        } catch (error) {
-            console.error("Failed to mark notification as read:", error);
-        }
-    };
+      setSocket(newSocket);
 
-    const markAllAsRead = async () => {
-        try {
-            await api.notifications.markAllRead();
-            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-        } catch (error) {
-            console.error("Failed to mark all notifications as read:", error);
-        }
-    };
+      return () => {
+        newSocket.disconnect();
+      };
+    }
+  }, [isAuthenticated]);
 
-    const clearAll = () => {
-        setNotifications([]);
-    };
+  const markAsRead = async (id: string) => {
+    try {
+      await api.notifications.markRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      );
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
 
-    return (
-        <NotificationContext.Provider
-            value={{
-                notifications,
-                unreadCount,
-                markAsRead,
-                markAllAsRead,
-                clearAll,
-            }}
-        >
-            {children}
-        </NotificationContext.Provider>
-    );
+  const markAllAsRead = async () => {
+    try {
+      await api.notifications.markAllRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Failed to mark all as read:", error);
+    }
+  };
+
+  const clearAll = () => {
+    setNotifications([]);
+  };
+
+  return (
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unreadCount,
+        totalNotifications,
+        hasMoreNotifications,
+        loadMoreNotifications,
+        markAsRead,
+        markAllAsRead,
+        clearAll,
+      }}
+    >
+      {children}
+    </NotificationContext.Provider>
+  );
 }
 
 export function useNotifications() {
-    const context = useContext(NotificationContext);
-    if (context === undefined) {
-        throw new Error("useNotifications must be used within a NotificationProvider");
-    }
-    return context;
+  const context = useContext(NotificationContext);
+  if (context === undefined) {
+    throw new Error("useNotifications must be used within a NotificationProvider");
+  }
+  return context;
 }

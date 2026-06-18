@@ -113,18 +113,18 @@ export default function ProjectRoom() {
 
     // Sync active project with room data updates
     useEffect(() => {
-        if (room && room.projects.length > 0) {
+        const projs = room?.projects ?? [];
+        if (room && projs.length > 0) {
             if (!activeProject) {
-                setActiveProject(room.projects[0]);
+                setActiveProject(projs[0]);
             } else {
-                const current = room.projects.find(p => p.id === activeProject.id);
-                // Only update if the project data has actually changed (e.g., task count/status)
+                const current = projs.find(p => p.id === activeProject.id);
                 if (current && JSON.stringify(current) !== JSON.stringify(activeProject)) {
                     setActiveProject(current);
                 }
             }
         }
-    }, [room, activeProject?.id]); // Depend on ID instead of object to avoid loops
+    }, [room, activeProject?.id]);
 
     if (isLoading) {
         return (
@@ -209,7 +209,7 @@ export default function ProjectRoom() {
                                     <div>
                                         <p className="text-xs font-bold text-purple-400/60 uppercase tracking-widest mb-1">Tasks</p>
                                         <div className="text-4xl font-bold text-white leading-none">
-                                            {room.projects.reduce((sum, p) => sum + p.tasks.length, 0)}
+                                            {(room.projects ?? []).reduce((sum, p) => sum + p.tasks.length, 0)}
                                         </div>
                                     </div>
                                     <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform">
@@ -225,7 +225,7 @@ export default function ProjectRoom() {
                                     <div>
                                         <p className="text-xs font-bold text-green-400/60 uppercase tracking-widest mb-1">Completed</p>
                                         <div className="text-4xl font-bold text-white leading-none">
-                                            {room.projects.reduce((sum, p) => sum + p.tasks.filter(t => t.status === 'done').length, 0)}
+                                            {(room.projects ?? []).reduce((sum, p) => sum + p.tasks.filter(t => t.status === 'done').length, 0)}
                                         </div>
                                     </div>
                                     <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center border border-green-500/20 group-hover:scale-110 transition-transform">
@@ -386,7 +386,7 @@ export default function ProjectRoom() {
                                                     <p className="text-xs text-white/40">{member.user.email}</p>
                                                     <div className="flex gap-3 mt-1.5">
                                                         {(() => {
-                                                            const stats = room.projects.reduce((acc, project) => {
+                                                            const stats = (room.projects ?? []).reduce((acc, project) => {
                                                                 const userTasks = project.tasks.filter(t => t.assignedToId === member.userId);
                                                                 return {
                                                                     assigned: acc.assigned + userTasks.length,

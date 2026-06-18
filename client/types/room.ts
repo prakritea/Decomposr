@@ -11,8 +11,9 @@ export interface ProjectRoom {
     creator?: { name: string; email: string };
     createdAt: Date;
     members: RoomMember[];
-    projects: Project[];
+    projects?: Project[];
     projectPlanId?: string;
+    _count?: { members: number; projects: number };
 }
 
 export interface RoomMember {

@@ -133,7 +133,7 @@ export function ProjectOverview({
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <pre className="text-white/80 leading-relaxed pt-2 whitespace-pre-wrap font-mono text-sm overflow-x-auto">
+                        <pre className="text-white/80 leading-relaxed pt-2 whitespace-pre font-mono text-xs md:text-sm overflow-x-auto bg-black/40 p-4 rounded-xl border border-white/5">
                             {project.architecture}
                         </pre>
                     </CardContent>

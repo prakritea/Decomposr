@@ -1,12 +1,15 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { prisma } from "./lib/prisma";
 import authRoutes from "./routes/auth";
 import roomRoutes from "./routes/rooms";
 import projectRoutes from "./routes/projects";
 import notificationRoutes from "./routes/notifications";
+import jwt from "jsonwebtoken";
 import { Server } from "socket.io";
 import type { Server as HttpServer } from "http";
+import { JWT_SECRET } from "./lib/config";
 
 let io: Server;
 
@@ -16,13 +19,28 @@ export function createServer(httpServer?: any, existingApp?: express.Express) {
   if (httpServer) {
     io = new Server(httpServer, {
       cors: {
-        origin: "*", // Adjust in production
-        methods: ["GET", "POST"]
+        origin: "*",
+        methods: ["GET", "POST"],
+        credentials: true,
+      }
+    });
+
+    // Authenticate socket connections via JWT
+    io.use((socket, next) => {
+      const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+      if (!token) return next(new Error("Authentication required"));
+
+      try {
+        const decoded = jwt.verify(token as string, JWT_SECRET) as { id: string; name: string; role: string };
+        (socket as any).userId = decoded.id;
+        next();
+      } catch {
+        next(new Error("Invalid token"));
       }
     });
 
     io.on("connection", (socket) => {
-      const userId = socket.handshake.query.userId as string;
+      const userId = (socket as any).userId;
       if (userId) {
         socket.join(userId);
         console.log(`User ${userId} connected to socket`);
@@ -35,9 +53,10 @@ export function createServer(httpServer?: any, existingApp?: express.Express) {
   }
 
   // Middleware
-  app.use(cors());
+  app.use(cors({ origin: true, credentials: true }));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  app.use(cookieParser());
 
   // Latency logging
   app.use((req, res, next) => {
